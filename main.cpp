@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     if (dspfilesep == std::string::npos)
         md.filename = cmd.dspfile;
     else
-        md.filename = cmd.dspfile.substr(dspfilesep);
+        md.filename = cmd.dspfile.substr(dspfilesep + 1);
 
     render_metadata(std::cout, md, cmd.tmplfile, cmd.defines);
     std::cout.flush();
