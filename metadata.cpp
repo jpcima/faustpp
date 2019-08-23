@@ -75,6 +75,27 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
         ccode.clear();
         ccode.reserve(8192);
 
+        // add our warning suppressions
+        ccode.append(
+            "#if defined(__GNUC__)" "\n"
+            "#   pragma GCC diagnostic push" "\n"
+            "#   pragma GCC diagnostic ignored \"-Wunused-parameter\"" "\n"
+            "#endif" "\n"
+            "\n");
+
+        // add our overrides for source keywords
+        ccode.append(
+            "#ifndef FAUSTPP_PRIVATE" "\n"
+            "#   define FAUSTPP_PRIVATE private" "\n"
+            "#endif" "\n"
+            "#ifndef FAUSTPP_PROTECTED" "\n"
+            "#   define FAUSTPP_PROTECTED protected" "\n"
+            "#endif" "\n"
+            "#ifndef FAUSTPP_VIRTUAL" "\n"
+            "#   define FAUSTPP_VIRTUAL virtual" "\n"
+            "#endif" "\n"
+            "\n");
+
         std::istringstream in(*mdsource);
         while (std::getline(in, line)) {
             if (isInIntrinsic) {
@@ -98,6 +119,13 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
             else if (line == "<<<<BeginFaustClass>>>>")
                 isInClass = true;
         }
+
+        // add our warning suppressions
+        ccode.append(
+            "\n"
+            "#if defined(__GNUC__)" "\n"
+            "#   pragma GCC diagnostic pop" "\n"
+            "#endif" "\n");
     }
 
     return 0;

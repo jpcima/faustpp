@@ -43,25 +43,12 @@ class dsp {
 public:
 };
 
-#if defined(__GNUC__)
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif
-
-#define virtual // do not declare any methods virtual
-#define private public // do not hide any members
-#define protected public // do not hide any members
+#define FAUSTPP_VIRTUAL // do not declare any methods virtual
+#define FAUSTPP_PRIVATE public // do not hide any members
+#define FAUSTPP_PROTECTED public // do not hide any members
 
 {{intrinsic_code}}
 {{class_code}}
-
-#undef virtual
-#undef private
-#undef protected
-
-#if defined(__GNUC__)
-#   pragma GCC diagnostic pop
-#endif
 
 //------------------------------------------------------------------------------
 // End the Faust code section
@@ -199,6 +186,31 @@ bool {{Identifier}}::parameter_is_logarithmic(unsigned index) noexcept
     {% endif %}{% endfor%}
     default:
         return false;
+    }
+}
+
+float {{Identifier}}::get_parameter(unsigned index) const noexcept
+{
+    switch (index) {
+    {% for w in active %}
+    case {{loop.index}}:
+        return fDsp->{{w.var}};
+    {% endfor%}
+    default:
+        return 0;
+    }
+}
+
+void {{Identifier}}::set_parameter(unsigned index, float value) noexcept
+{
+    switch (index) {
+    {% for w in active %}
+    case {{loop.index}}:
+        fDsp->{{w.var}} = value;
+        break;
+    {% endfor%}
+    default:
+        break;
     }
 }
 

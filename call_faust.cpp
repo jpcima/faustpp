@@ -16,7 +16,7 @@
 static int execute(char *argv[]);
 static int mktempdir(char *tmp);
 
-static int apply_workarounds(pugi::xml_document &docmd, const std::string &cppsource);
+static int apply_workarounds(pugi::xml_document &docmd, std::string &cppsource);
 
 //------------------------------------------------------------------------------
 int call_faust(
@@ -129,7 +129,7 @@ static bool parse_cstrlit(std::string &dst, const gsl::cstring_span src)
     return true;
 }
 
-static int apply_workarounds(pugi::xml_document &docmd, const std::string &cppsource)
+static int apply_workarounds(pugi::xml_document &docmd, std::string &cppsource)
 {
     pugi::xml_node root = docmd.child("faust");
 
@@ -197,6 +197,42 @@ static int apply_workarounds(pugi::xml_document &docmd, const std::string &cppso
 
         if (in.bad())
             return -1;
+    }
+
+    {
+        std::string cppsourcemod;
+        std::istringstream in(cppsource);
+
+        // workaround: allow to modify member visibility
+        // workaround: allow to bypass the virtual keyword
+
+        static const std::regex re_private(
+            "^(\\s*)private(\\s*:.*)$");
+        static const std::regex re_protected(
+            "^(\\s*)protected(\\s*:.*)$");
+        static const std::regex re_virtual(
+            "^(\\s*)virtual([ \\t].*$|$)");
+
+        //
+        std::string line;
+        do {
+            line.clear();
+            std::getline(in, line);
+
+            std::smatch match;
+
+            if (std::regex_match(line, match, re_private))
+                line = match[1].str() + "FAUSTPP_PRIVATE" + match[2].str();
+            else if (std::regex_match(line, match, re_protected))
+                line = match[1].str() + "FAUSTPP_PROTECTED" + match[2].str();
+            else if (std::regex_match(line, match, re_virtual))
+                line = match[1].str() + "FAUSTPP_VIRTUAL" + match[2].str();
+
+            cppsourcemod.append(line);
+            cppsourcemod.push_back('\n');
+        } while (in);
+
+        cppsource = cppsourcemod;
     }
 
     return 0;

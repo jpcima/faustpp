@@ -33,6 +33,8 @@ public:
         {% for i in range(outputs) %}float *out{{i}},{% endfor %}
         unsigned count) noexcept;
 
+    enum { inputs = {{inputs}} };
+    enum { outputs = {{outputs}} };
     enum { parameters = {{length(active)}} };
 
     enum Parameter {
@@ -55,6 +57,9 @@ public:
     static bool parameter_is_boolean(unsigned index) noexcept;
     static bool parameter_is_integer(unsigned index) noexcept;
     static bool parameter_is_logarithmic(unsigned index) noexcept;
+
+    float get_parameter(unsigned index) const noexcept;
+    void set_parameter(unsigned index, float value) noexcept;
 
     {% for w in active %}
     float get_{{cid(default(w.meta.symbol,w.label))}}() const noexcept;
