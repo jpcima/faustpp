@@ -211,6 +211,7 @@ void {{Identifier}}::set_parameter(unsigned index, float value) noexcept
         break;
     {% endfor%}
     default:
+        (void)value;
         break;
     }
 }
