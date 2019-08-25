@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // This file was generated using the Faust compiler (https://faust.grame.fr),
 // and the Faust post-processor (https://github.com/jpcima/faustpp).
 //
@@ -8,7 +8,7 @@
 // Copyright: {{copyright}}
 // License: {{license}}
 // Version: {{version}}
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 #include "{{Identifier}}.hpp"
 #include <cmath>
