@@ -380,10 +380,10 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
         unsigned n;
         float f;
         int i;
-        if (sscanf(def.second.c_str(), "%f%n", &f, &n) == 1 && n == def.second.size())
-            root_obj[def.first] = f;
-        else if (sscanf(def.second.c_str(), "%d%n", &i, &n) == 1 && n == def.second.size())
+        if (sscanf(def.second.c_str(), "%d%n", &i, &n) == 1 && n == def.second.size())
             root_obj[def.first] = i;
+        else if (sscanf(def.second.c_str(), "%f%n", &f, &n) == 1 && n == def.second.size())
+            root_obj[def.first] = f;
         else
             root_obj[def.first] = def.second;
     }
