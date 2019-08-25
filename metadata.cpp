@@ -376,8 +376,17 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
             return mangle(args.at(0)->get<std::string>());
         });
 
-    for (auto &def : defines)
-        root_obj[def.first] = def.second;
+    for (auto &def : defines) {
+        unsigned n;
+        float f;
+        int i;
+        if (sscanf(def.second.c_str(), "%f%n", &f, &n) == 1 && n == def.second.size())
+            root_obj[def.first] = f;
+        else if (sscanf(def.second.c_str(), "%d%n", &i, &n) == 1 && n == def.second.size())
+            root_obj[def.first] = i;
+        else
+            root_obj[def.first] = def.second;
+    }
 
     env.render_to(out, tmpl, root_obj);
 }
