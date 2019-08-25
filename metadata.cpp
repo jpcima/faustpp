@@ -3,11 +3,13 @@
 //    (See accompanying file LICENSE or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#define __STDC_FORMAT_MACROS 1
 #include "metadata.h"
 #include "messages.h"
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <cinttypes>
 #include <cassert>
 
 static const std::string cstrlit(gsl::cstring_span text);
@@ -378,11 +380,14 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
 
     for (auto &def : defines) {
         unsigned n;
-        float f;
-        int i;
-        if (sscanf(def.second.c_str(), "%d%n", &i, &n) == 1 && n == def.second.size())
+        int64_t i;
+        uint64_t u;
+        double f;
+        if (sscanf(def.second.c_str(), "%" SCNi64 "%n", &i, &n) == 1 && n == def.second.size())
             root_obj[def.first] = i;
-        else if (sscanf(def.second.c_str(), "%f%n", &f, &n) == 1 && n == def.second.size())
+        if (sscanf(def.second.c_str(), "%" SCNu64 "%n", &u, &n) == 1 && n == def.second.size())
+            root_obj[def.first] = u;
+        else if (sscanf(def.second.c_str(), "%lf%n", &f, &n) == 1 && n == def.second.size())
             root_obj[def.first] = f;
         else
             root_obj[def.first] = def.second;
