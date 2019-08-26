@@ -311,6 +311,11 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
     inja::Environment env;
     inja::Template tmpl = env.parse_template(tmplfile);
 
+    if (tmpl.content.empty()) {
+        errs() << "The template file is empty or unreadable.\n";
+        return;
+    }
+
     nlohmann::json root_obj;
 
     root_obj["intrinsic_code"] = md.intrinsic_code;
