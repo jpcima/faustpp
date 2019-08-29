@@ -42,7 +42,6 @@ public:
         {% endfor %}
     };
 
-
     struct ParameterRange {
         float init;
         float min;
