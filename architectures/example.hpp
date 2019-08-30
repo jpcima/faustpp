@@ -14,9 +14,7 @@
 #ifndef {{Identifier}}_Faust_pp_Gen_HPP_
 #define {{Identifier}}_Faust_pp_Gen_HPP_
 
-#if __cplusplus < 201103L
-#   define noexcept
-#endif
+#include <memory>
 
 class {{class_name}};
 
@@ -33,9 +31,9 @@ public:
         {% for i in range(outputs) %}float *out{{i}},{% endfor %}
         unsigned count) noexcept;
 
-    enum { inputs = {{inputs}} };
-    enum { outputs = {{outputs}} };
-    enum { parameters = {{length(active)}} };
+    enum { NumInputs = {{inputs}} };
+    enum { NumOutputs = {{outputs}} };
+    enum { NumParameters = {{length(active)}} };
 
     enum Parameter {
         {% for w in active %}p_{{cid(default(w.meta.symbol,w.label))}},
@@ -66,17 +64,7 @@ public:
     {% endfor %}
 
 private:
-    {{class_name}} *fDsp;
-
-private:
-    {{Identifier}}(const {{Identifier}} &other);
-    {{Identifier}} &operator=(const {{Identifier}} &other);
-
-#if __cplusplus >= 201103L
-public:
-    {{Identifier}}({{Identifier}} &&other) noexcept;
-    {{Identifier}} &operator=({{Identifier}} &&other) noexcept;
-#endif
+    std::unique_ptr<{{class_name}}> fDsp;
 };
 
 #endif // {{Identifier}}_Faust_pp_Gen_HPP_

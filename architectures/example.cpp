@@ -62,7 +62,6 @@ public:
 
 {{Identifier}}::~{{Identifier}}()
 {
-    delete fDsp;
 }
 
 void {{Identifier}}::init(float sample_rate)
@@ -227,21 +226,3 @@ void {{Identifier}}::set_{{cid(default(w.meta.symbol,w.label))}}(float value) no
     fDsp->{{w.var}} = value;
 }
 {% endfor %}
-
-#if __cplusplus >= 201103L
-{{Identifier}}::{{Identifier}}({{Identifier}} &&other) noexcept
-    : fDsp(other.fDsp)
-{
-    other.fDsp = 0;
-}
-
-{{Identifier}} &{{Identifier}}::operator=({{Identifier}} &&other) noexcept
-{
-    if (this != &other) {
-        delete fDsp;
-        fDsp = other.fDsp;
-        other.fDsp = 0;
-    }
-    return *this;
-}
-#endif
