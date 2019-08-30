@@ -53,7 +53,7 @@ The program may be invoked with the following options:
 
 * `-a <architecture-file>`: selects the architecture file to use. This is a template file expressed in https://github.com/pantor/inja[Inja] syntax.
 * `-D<name=value>`: defines a variable in the environment of the template engine, to modify the behavior of the generation.
-* `-X<faust-arg>`: passes the `faust-arg` argument to the faust compiler. These arguments are passed to the compiler in the same order as they are specified.
+* `-X<faust-arg>`: passes the `faust-arg` argument to the Faust compiler. These arguments are passed to the compiler in the same order as they are specified.
 For example, if you want to enable double precision processing, pass `-X-double`.
 
 WARNING: If you use `-X` options to generate multiple related files, such as `.cpp` and `.hpp` files, make absolutely sure to pass the same `-X` flags in every invocation of the program.
