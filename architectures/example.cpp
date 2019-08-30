@@ -97,7 +97,7 @@ const char *{{Identifier}}::parameter_label(unsigned index) noexcept
     {% for w in active %}
     case {{loop.index}}:
         return {{cstr(w.label)}};
-    {% endfor%}
+    {% endfor %}
     default:
         return 0;
     }
@@ -109,7 +109,7 @@ const char *{{Identifier}}::parameter_short_label(unsigned index) noexcept
     {% for w in active %}
     case {{loop.index}}:
         return {{cstr(default(w.meta.abbrev,""))}};
-    {% endfor%}
+    {% endfor %}
     default:
         return 0;
     }
@@ -121,7 +121,7 @@ const char *{{Identifier}}::parameter_symbol(unsigned index) noexcept
     {% for w in active %}
     case {{loop.index}}:
         return {{cstr(cid(default(w.meta.symbol,w.label)))}};
-    {% endfor%}
+    {% endfor %}
     default:
         return 0;
     }
@@ -133,7 +133,7 @@ const char *{{Identifier}}::parameter_unit(unsigned index) noexcept
     {% for w in active %}
     case {{loop.index}}:
         return {{cstr(w.unit)}};
-    {% endfor%}
+    {% endfor %}
     default:
         return 0;
     }
@@ -147,7 +147,7 @@ const {{Identifier}}::ParameterRange *{{Identifier}}::parameter_range(unsigned i
         static const ParameterRange range = { {{w.init}}, {{w.min}}, {{w.max}} };
         return &range;
     }
-    {% endfor%}
+    {% endfor %}
     default:
         return 0;
     }
@@ -159,7 +159,7 @@ bool {{Identifier}}::parameter_is_trigger(unsigned index) noexcept
     {% for w in active %}{% if (w.type == "button" or existsIn(w.meta, "trigger")) %}
     case {{loop.index}}:
         return true;
-    {% endif %}{% endfor%}
+    {% endif %}{% endfor %}
     default:
         return false;
     }
@@ -171,7 +171,7 @@ bool {{Identifier}}::parameter_is_boolean(unsigned index) noexcept
     {% for w in active %}{% if (w.type == "button" or w.type == "checkbox") or existsIn(w.meta, "boolean") %}
     case {{loop.index}}:
         return true;
-    {% endif %}{% endfor%}
+    {% endif %}{% endfor %}
     default:
         return false;
     }
@@ -183,7 +183,7 @@ bool {{Identifier}}::parameter_is_integer(unsigned index) noexcept
     {% for w in active %}{% if (w.type == "button" or w.type == "checkbox") or (existsIn(w.meta, "integer") or existsIn(w.meta, "boolean")) %}
     case {{loop.index}}:
         return true;
-    {% endif %}{% endfor%}
+    {% endif %}{% endfor %}
     default:
         return false;
     }
@@ -195,7 +195,7 @@ bool {{Identifier}}::parameter_is_logarithmic(unsigned index) noexcept
     {% for w in active %}{% if w.scale == "log" %}
     case {{loop.index}}:
         return true;
-    {% endif %}{% endfor%}
+    {% endif %}{% endfor %}
     default:
         return false;
     }
@@ -207,7 +207,7 @@ float {{Identifier}}::get_parameter(unsigned index) const noexcept
     {% for w in active %}
     case {{loop.index}}:
         return fDsp->{{w.var}};
-    {% endfor%}
+    {% endfor %}
     default:
         return 0;
     }
@@ -220,7 +220,7 @@ void {{Identifier}}::set_parameter(unsigned index, float value) noexcept
     case {{loop.index}}:
         fDsp->{{w.var}} = value;
         break;
-    {% endfor%}
+    {% endfor %}
     default:
         (void)value;
         break;
