@@ -9,10 +9,10 @@ v1.0
 :toc:
 
 [.Lead]
-This documents describes usage of the *Faust post-processor*, a flexible code generator for Faust source files. +
+This documents describes usage of the https://github.com/jpcima/faustpp[*Faust post-processor*], a flexible code generator for Faust source files. +
 https://faust.grame.fr/[Faust], or "Functional Audio Stream", is a programming language and compiler for signal processing developed at http://www.grame.fr/[GRAME].
 
-NOTE: If you encounter a problem with the software, please create an issue on the project page: +
+NOTE: If you encounter a problem with the software, please open an issue on the project page: +
 https://github.com/jpcima/faustpp/issues
 
 == Description
