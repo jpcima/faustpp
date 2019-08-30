@@ -47,6 +47,17 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    Faust_Version faustver;
+    if (get_faust_version(faustver) == -1)
+        warns() << "Cannot determine the version of Faust.\n";
+    else {
+        Faust_Version faustminver{0, 9, 85};
+        if (faustver < faustminver) {
+            errs() << "The Faust version " << faustver << " is too old, the requirement is " << faustminver << ".\n";
+            return 1;
+        }
+    }
+
     std::string mdfile = get_tempfile_location("md.cpp");
     if (mdfile.empty())
         return -1;

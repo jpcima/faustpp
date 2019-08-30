@@ -7,6 +7,7 @@
 #include "pugixml/pugixml.hpp"
 #include <string>
 #include <vector>
+#include <iosfwd>
 
 struct Faust_Args {
     std::vector<std::string> compile_args;
@@ -17,3 +18,14 @@ int call_faust(
     pugi::xml_document *docmd,
     std::string *cppsource,
     const Faust_Args &faustargs);
+
+struct Faust_Version {
+    Faust_Version() {}
+    Faust_Version(unsigned maj, unsigned min, unsigned pat) : number{maj, min, pat} {}
+    bool operator<(const Faust_Version &oth) const;
+    unsigned number[3] = {};
+};
+
+int get_faust_version(Faust_Version &version);
+
+std::ostream &operator<<(std::ostream &os, const Faust_Version &ver);

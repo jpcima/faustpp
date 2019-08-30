@@ -14,7 +14,7 @@
 #include <random>
 #include <regex>
 
-static int execute(char *argv[]);
+static int execute(char *argv[], int out_fd = -1);
 static int mktempdir(char *tmp);
 
 static int apply_workarounds(pugi::xml_document &docmd, std::string &cppsource);
@@ -95,6 +95,51 @@ int call_faust(
         if (apply_workarounds(*docmd, *cppsource) == -1)
             return -1;
     }
+
+    return 0;
+}
+
+int get_faust_version(Faust_Version &version)
+{
+    char *fargv[] = {(char *)"faust", (char *)"--version", nullptr};
+
+    if (const char *program = getenv("FAUST"))
+        fargv[0] = (char *)program;
+
+    FILE *tmp = tmpfile();
+    if (!tmp)
+        return -1;
+    auto file_cleanup = gsl::finally([&]() { fclose(tmp); });
+
+    if (execute(fargv, fileno(tmp)) != 0)
+        return -1;
+
+    fflush(tmp);
+    rewind(tmp);
+
+    std::string line;
+    line.reserve(256);
+
+    for (int c; (c = fgetc(tmp)) != EOF && c != '\r' && c != '\n';)
+        line.push_back(c);
+
+    if (ferror(tmp))
+        return -1;
+
+    std::transform(
+        line.begin(), line.end(), line.begin(),
+        [](char c) -> char { return (c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c; });
+
+    size_t index = line.rfind("version");
+    if (index == line.npos)
+        return -1;
+
+    const char *cstr = line.c_str() + index + 7;
+    while (*cstr == ' ' || *cstr == '\t')
+        ++cstr;
+
+    if (sscanf(cstr, "%u.%u.%u", &version.number[0], &version.number[1], &version.number[2]) < 1)
+        return -1;
 
     return 0;
 }
@@ -240,12 +285,17 @@ static int apply_workarounds(pugi::xml_document &docmd, std::string &cppsource)
 }
 
 //------------------------------------------------------------------------------
-static int execute(char *argv[])
+static int execute(char *argv[], int out_fd)
 {
     posix_spawn_file_actions_t fa;
     if (posix_spawn_file_actions_init(&fa) == -1)
         return -1;
     auto fa_cleanup = gsl::finally([&]() { posix_spawn_file_actions_destroy(&fa); });
+
+    if (out_fd != -1) {
+        if (posix_spawn_file_actions_adddup2(&fa, out_fd, STDOUT_FILENO) != 0)
+            return -1;
+    }
 
     posix_spawnattr_t sa;
     if (posix_spawnattr_init(&sa) == -1)
@@ -283,4 +333,18 @@ static int mktempdir(char *tmp)
     }
 
     return ret;
+}
+
+///
+bool Faust_Version::operator<(const Faust_Version &oth) const
+{
+    for (unsigned i = 0; i < 3; ++i)
+        if (number[i] != oth.number[i])
+            return number[i] < oth.number[i];
+    return false;
+}
+
+std::ostream &operator<<(std::ostream &os, const Faust_Version &ver)
+{
+    return os << ver.number[0] << '.' << ver.number[1] << '.' << ver.number[2];
 }
