@@ -1,0 +1,15 @@
+language: cpp
+os: linux
+sudo: required
+dist: trusty
+addons:
+  apt:
+    update: true
+    packages:
+      - build-essential
+      - pkg-config
+      - faust
+      - libjack-dev
+script:
+  - make
+  - make -C examples
