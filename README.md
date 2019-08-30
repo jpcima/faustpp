@@ -14,7 +14,7 @@ Custom metadata can be handled by the template mechanism.
 
 ## Usage
 
-For detailed information, refer to the manual located under the `docs` directory.
+For detailed information, refer to the [documentation](https://jpcima.github.io/faustpp).
 
 An example is provided in the `architectures` directory.
 It is usable and illustrates many features.
