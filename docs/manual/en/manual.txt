@@ -1,0 +1,233 @@
+// -*- mode: adoc; -*-
+// SPDX-License-Identifier: LAL-1.3 or CC-BY-SA-4.0
+
+:lang: en
+
+= User manual
+Jean Pierre Cimalando
+v1.0
+:toc:
+
+[.Lead]
+This documents describes usage of the *Faust post-processor*, a flexible code generator for Faust source files. +
+https://faust.grame.fr/[Faust], or "Functional Audio Stream", is a programming language and compiler for signal processing developed at http://www.grame.fr/[GRAME].
+
+NOTE: If you encounter a problem with the software, please create an issue on the project page: +
+https://github.com/jpcima/faustpp/issues
+
+== Description
+
+This is a code generator for Faust with a particularity: it offers advanced control on the format of generated code.
+
+Usually, the code output from the Faust compiler will be a single implementation file written in C++ or another language,
+and it exposes some methods to instantiate the object, control it, and access some of its characteristics.
+
+However, because such generated code is so monolithic, it is not always easy to embed it as a part of a larger program,
+in a separate compilation model, without violating the _DRY principle_ ("Don't repeat yourself").
+These units also offer some introspection abilities, whose model is dynamic rather than static, which may be considered unpractical.
+
+The novelty of this post-processor over Faust is to substitute the concept of _architectures_, used to generate many flavors of programs,
+with _architecture templates_ whose processing is backed by a https://github.com/pantor/inja[templating engine].
+The concepts are quite similiar, except templates allow to express it with greater power.
+
+== Quick start
+
+This needs the Faust compiler version 0.9.85 or greater, as well as Faustpp installed on the system.
+
+The following is the minimal invocation of the program.
+The result is a pair of files, a source and a header, ready to by included in a project.
+
+....
+faustpp -DIdentifier=MyEffect -a generic.cpp MyEffect.dsp > MyEffect.cpp
+faustpp -DIdentifier=MyEffect -a generic.hpp MyEffect.dsp > MyEffect.hpp
+....
+
+These options are *required*:
+
+* `-DIdentifier=MyEffect`: this defines the name of the class in generated source code.
+* `-a generic.cpp`: this selects the architecture file to use. For most cases, `generic` is adequate; it is available under the `architectures` directory.
+
+== Command-line options
+
+The program may be invoked with the following options:
+
+* `-a <architecture-file>`: selects the architecture file to use. This is a template file expressed in https://github.com/pantor/inja[Inja] syntax.
+* `-D<name=value>`: defines a variable in the environment of the template engine, to modify the behavior of the generation.
+* `-X<faust-arg>`: passes the `faust-arg` argument to the faust compiler. These arguments are passed to the compiler in the same order as they are specified.
+For example, if you want to enable double precision processing, pass `-X-double`.
+
+WARNING: If you use `-X` options to generate multiple related files, such as `.cpp` and `.hpp` files, make absolutely sure to pass the same `-X` flags in every invocation of the program.
+
+== Using the provided templates
+
+The program comes with its own set of templates, which can be used directly or adapted to particular needs.
+The templates are located under the `architectures` folder of the software distribution.
+
+The templates can be parameterized with `-D` options, which are explained in their respective sections.
+
+Refer to the `examples` directory for a few examples which use these templates.
+
+=== The generic template
+
+The `generic` template produces a class which is ready to include in other source code for direct use.
+
+The result offers the following abilities:
+
+* a split generation into a header and an implementation file
+* a direct introspection of the characteristics of the controls
+* recognition of some custom metadata for widgets: `[symbol:]`, `[trigger]`, `[boolean]`, `[integer]`
+* named getters and setters for the controls
+* a simplified signature for the processing routine
+
+[#generic-options]
+==== Options
+
+.`-DIdentifier=<id>`
+The name of the generated class which wraps the processing code of the Faust module. *[String]*
+
+[#generic-metadata]
+==== Metadata
+
+.`Widget.symbol`
+The C-style identifier which names the control in the generated code, and its getter/setter pair. *[String]* +
+The name is also adequate for use with the `lv2:symbol` property of the LV2 plugin specification.
+
+.`Widget.trigger`
+This indicates that the widget works like a trigger, similarly to the `button` widget. *[Boolean]* +
+Setting this property on `hslider` or `vslider` allows to define the value domain.
+
+.`Widget.boolean`
+This indicates that the widget works like a boolean, similarly to the `checkbox` widget. *[Boolean]* +
+Setting this property on `hslider` or `vslider` allows to define the value domain and the initial value.
+
+.`Widget.integer`
+This indicates that the widget is valued on an integer scale. *[Boolean]*
+
+=== The oversampled template
+
+The `oversampled` template produces a class which operates exactly like `generic` from user perspective,
+except it implements transparent oversampling by a fixed factor.
+
+The source code of the Faust module should be adapted to take in consideration the oversampling ratio, as defined by this Faust statement:
+`OS = fconstant(int gOversampling, <math.h>);`
+
+It accepts all options recognized by the `generic` template, as well as additional ones as documented below.
+
+==== Options
+
+See also <<generic-options,Generic template options>>.
+
+.`-DOversampling=<ratio>`
+The oversampling ratio, which is either of the following values: `1`, `2`, `4`, `8`, `16`. *[Integer]*
+
+==== Metadata
+
+See also <<generic-metadata,Generic template metadata>>.
+
+== Creating architecture templates
+
+The template files are expressed in https://github.com/pantor/inja[Inja] syntax.
+
+These files are mostly comprised of static text, and particular tags inside of it which are interpreted by the templating engine,
+
+* `+{{...}}+` blocks are known as *expressions*, they substitute with the evaluation of their content.
+* `+{%...%}+` blocks are known as *statements*, they can express control flow such as iterations and conditionals.
+* `+{#...#}+` blocks are known as *comments*, they are ignored.
+
+Refer to the documentation of the templating engine for details.
+
+To get a better idea, examine existing templates from the `architectures` folder.
+
+=== Template variables
+
+A set of variables are made available to the template, describing the Faust source which is compiled.
+
+.`name`
+The name of the Faust module. *[String]*
+
+.`author`
+The author of the Faust module. *[String]*
+
+.`copyright`
+The copyright of the Faust module. *[String]*
+
+.`license`
+The license of the Faust module. *[String]*
+
+.`version`
+The version of the Faust module. *[String]*
+
+.`class_name`
+The name of the class generated by this Faust module. *[String]*
+
+.`file_name`
+The name of the Faust source file, without any leading path components. *[String]*
+
+.`inputs`
+The number of signal inputs. *[Integer]*
+
+.`outputs`
+The number of signal outputs. *[Integer]*
+
+.`meta`
+A dictionary containing all the file-level metadata. *[Object]* +
+In Faust source code, this is the information provided by `declare` statements at the top-level.
+
+.`active`
+A list of all the active controls for this Faust module. *[List of Widget]* +
+Active controls are input parameters, represented by buttons, sliders or knobs.
+
+.`passive`
+A list of all the passive controls for this Faust module. *[List of Widget]* +
+Passive controls are output parameters, usually used for display or analysis purposes.
+
+.`class_code`
+The source code of the class generated by the Faust compiler, in raw and minimal form. *[String]*
+
+==== Widget variables
+
+.`Widget.type`
+The type of the widget. *[String]* +
+
+This is one of the following values:
+
+* actives: `button`, `checkbox`, `vslider`, `hslider`, `nentry`
+* passives: `vbargraph`, `hbargraph`
+
+.`Widget.label`
+The display name of the widget. *[String]*
+
+.`Widget.var`
+The identifier of the instance variable which holds the value of the widget. *[String]*
+
+.`Widget.init`
+The default value of the widget. *[Number]*
+
+.`Widget.min`
+The minimum value of the widget. *[Number]*
+
+.`Widget.max`
+The maximum value of the widget. *[Number]*
+
+.`Widget.step`
+The step value, or resolution of the widget. *[Number]*
+
+.`Widget.unit`
+The unit of the values accepted by the widget. *[String]*
+
+.`Widget.scale`
+The scale of the widget. *[String]* +
+The standard scale values in Faust are the following: `linear`, `log`, `exp`
+
+.`Widget.tooltip`
+A short description text which is adequate for tooltip popup window. *[String]*
+
+=== Template functions
+
+Some functions are available to assist with the task of source code generation.
+
+.`cstr(str)`
+Convert a string to a quoted string literal in C syntax. *[String] → [String]*
+
+.`cid(str)`
+Convert a string to an identifier which is valid in C syntax. *[String] → [String]*
