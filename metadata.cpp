@@ -329,6 +329,23 @@ std::ostream &operator<<(std::ostream &o, Metadata::Widget::Scale s)
 //------------------------------------------------------------------------------
 #include "inja/inja.hpp"
 
+static void json_value_from_string_assign(
+    nlohmann::json::reference dest, const std::string &value)
+{
+    unsigned n;
+    int64_t i;
+    uint64_t u;
+    double f;
+    if (sscanf(value.c_str(), "%" SCNi64 "%n", &i, &n) == 1 && n == value.size())
+        dest = i;
+    else if (sscanf(value.c_str(), "%" SCNu64 "%n", &u, &n) == 1 && n == value.size())
+        dest = u;
+    else if (sscanf(value.c_str(), "%lf%n", &f, &n) == 1 && n == value.size())
+        dest = f;
+    else
+        dest = value;
+}
+
 void render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines)
 {
     inja::Environment env;
@@ -355,7 +372,7 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
 
     nlohmann::json &file_meta = root_obj["meta"];
     for (const auto &meta : md.metadata)
-        file_meta[meta.first] = meta.second;
+        json_value_from_string_assign(file_meta[meta.first], meta.second);
 
     for (unsigned wtype = 0; wtype < 2; ++wtype) {
         const std::vector<Metadata::Widget> *widget_list = nullptr;
@@ -390,7 +407,7 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
 
             nlohmann::json &widget_meta = widget_obj["meta"];
             for (const auto &meta : widget.metadata)
-                widget_meta[meta.first] = meta.second;
+                json_value_from_string_assign(widget_meta[meta.first], meta.second);
         }
     }
 
@@ -405,20 +422,8 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
             return mangle(args.at(0)->get<std::string>());
         });
 
-    for (auto &def : defines) {
-        unsigned n;
-        int64_t i;
-        uint64_t u;
-        double f;
-        if (sscanf(def.second.c_str(), "%" SCNi64 "%n", &i, &n) == 1 && n == def.second.size())
-            root_obj[def.first] = i;
-        if (sscanf(def.second.c_str(), "%" SCNu64 "%n", &u, &n) == 1 && n == def.second.size())
-            root_obj[def.first] = u;
-        else if (sscanf(def.second.c_str(), "%lf%n", &f, &n) == 1 && n == def.second.size())
-            root_obj[def.first] = f;
-        else
-            root_obj[def.first] = def.second;
-    }
+    for (auto &def : defines)
+        json_value_from_string_assign(root_obj[def.first], def.second);
 
     env.render_to(out, tmpl, root_obj);
 }
