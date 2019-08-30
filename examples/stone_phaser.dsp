@@ -11,6 +11,10 @@ declare license "CC0-1.0";
 
 import("stdfaust.lib");
 
+// hz2midikey defined for faust1 which doesn't have it
+hz2midikey(f) = 12*ma.log2(f/440.0) + 69.0;
+midikey2hz = ba.midikey2hz;
+
 /////////////
 // Control //
 /////////////
@@ -88,11 +92,11 @@ mono_phaser(x, lfo_pos) = (fadeBypass * x) + (1. - fadeBypass) * (dry + wet) wit
   colorFb = ba.if(color, fb, 0.1*fb) : tsmooth;
   feedback = highpass1(fbHf) : *(colorFb);
 
-  lfoLoF = ba.if(color, ba.hz2midikey(80.), ba.hz2midikey(300.)) : tsmooth;
-  lfoHiF = ba.if(color, ba.hz2midikey(2200.), ba.hz2midikey(6000.)) : tsmooth;
+  lfoLoF = ba.if(color, hz2midikey(80.), hz2midikey(300.)) : tsmooth;
+  lfoHiF = ba.if(color, hz2midikey(2200.), hz2midikey(6000.)) : tsmooth;
 
-  modFreq = ba.midikey2hz(lfoAnalogTriangle(0.95, lfo_pos, lfoLoF, lfoHiF));
-  //modFreq = ba.midikey2hz(lfoExponentialTriangle(128., 0.6, 0.9, lfo_pos, lfoLoF, lfoHiF));
+  modFreq = midikey2hz(lfoAnalogTriangle(0.95, lfo_pos, lfoLoF, lfoHiF));
+  //modFreq = midikey2hz(lfoExponentialTriangle(128., 0.6, 0.9, lfo_pos, lfoLoF, lfoHiF));
 
   a1 = allpass1(modFreq);
   a2 = allpass1(modFreq);
