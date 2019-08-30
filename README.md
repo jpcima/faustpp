@@ -1,4 +1,7 @@
 # faustpp
+
+[![Build Status](https://travis-ci.com/jpcima/faustpp.svg?branch=master)](https://travis-ci.com/jpcima/faustpp)
+
 A post-processor for faust, which allows to generate with more flexibility
 
 This is a source transformation tool based on the [Faust compiler](https://faust.grame.fr/).
