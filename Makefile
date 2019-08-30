@@ -11,6 +11,8 @@ PROJECT_LDFLAGS =
 SRCS = main.cpp call_faust.cpp metadata.cpp thirdparty/pugixml/pugixml.cpp
 OBJS = $(SRCS:%.cpp=build/%.o)
 
+ARCHS = generic.hpp generic.cpp oversampled.hpp oversampled.cpp
+
 all: bin/faustpp
 
 clean:
@@ -19,8 +21,7 @@ clean:
 
 install: bin/faustpp
 	install -D -m 755 bin/faustpp $(DESTDIR)$(BINDIR)/faustpp
-	install -D -m 644 architectures/example.hpp $(DESTDIR)$(DATADIR)/faustpp/architectures/example.hpp
-	install -D -m 644 architectures/example.cpp $(DESTDIR)$(DATADIR)/faustpp/architectures/example.cpp
+	$(foreach a,$(ARCHS),install -D -m 644 architectures/$(a) $(DESTDIR)$(DATADIR)/faustpp/architectures/$(a);)
 
 bin/faustpp: $(OBJS)
 	@install -d $(dir $@)

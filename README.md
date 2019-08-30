@@ -26,6 +26,6 @@ In this particular example, you should pass a definition of `Identifier` in orde
 which is done with the option `-D`.
 
 ```
-faustpp -X-vec -DIdentifier=MyEffect -a architectures/test.cpp effect.dsp > effect.cpp
-faustpp -X-vec -DIdentifier=MyEffect -a architectures/test.hpp effect.dsp > effect.hpp
+faustpp -X-vec -DIdentifier=MyEffect -a architectures/generic.cpp effect.dsp > effect.cpp
+faustpp -X-vec -DIdentifier=MyEffect -a architectures/generic.hpp effect.dsp > effect.hpp
 ```
