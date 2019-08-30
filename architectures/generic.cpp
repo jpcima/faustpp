@@ -13,6 +13,11 @@
 #include "{{Identifier}}.hpp"
 #include <cmath>
 
+class {{Identifier}}::BasicDsp {
+public:
+    virtual ~BasicDsp() {}
+};
+
 //------------------------------------------------------------------------------
 // Begin the Faust code section
 
@@ -21,15 +26,15 @@ namespace {
 template <class T> inline T min(T a, T b) { return (a < b) ? a : b; }
 template <class T> inline T max(T a, T b) { return (a > b) ? a : b; }
 
-// dummy
 class Meta {
 public:
+    // dummy
     void declare(...) {}
 };
 
-// dummy
 class UI {
 public:
+    // dummy
     void openHorizontalBox(...) {}
     void openVerticalBox(...) {}
     void closeBox(...) {}
@@ -41,16 +46,17 @@ public:
     void addVerticalBargraph(...) {}
 };
 
-// dummy
-class dsp {
-public:
-};
+typedef {{Identifier}}::BasicDsp dsp;
 
 } // namespace
 
 #define FAUSTPP_VIRTUAL // do not declare any methods virtual
 #define FAUSTPP_PRIVATE public // do not hide any members
 #define FAUSTPP_PROTECTED public // do not hide any members
+
+// define the DSP in the anonymous namespace
+#define FAUSTPP_BEGIN_NAMESPACE namespace {
+#define FAUSTPP_END_NAMESPACE }
 
 {{intrinsic_code}}
 {{class_code}}
@@ -61,7 +67,8 @@ public:
 {{Identifier}}::{{Identifier}}()
     : fDsp(new {{class_name}})
 {
-    fDsp->instanceResetUserInterface();
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
+    dsp.instanceResetUserInterface();
 }
 
 {{Identifier}}::~{{Identifier}}()
@@ -70,7 +77,7 @@ public:
 
 void {{Identifier}}::init(float sample_rate)
 {
-    {{class_name}} &dsp = *fDsp;
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     dsp.classInit(sample_rate);
     dsp.instanceConstants(sample_rate);
     dsp.instanceClear();
@@ -78,7 +85,8 @@ void {{Identifier}}::init(float sample_rate)
 
 void {{Identifier}}::clear() noexcept
 {
-    fDsp->instanceClear();
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
+    dsp.instanceClear();
 }
 
 void {{Identifier}}::process(
@@ -86,13 +94,14 @@ void {{Identifier}}::process(
     {% for i in range(outputs) %}float *out{{i}},{% endfor %}
     unsigned count) noexcept
 {
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     float *inputs[] = {
         {% for i in range(inputs) %}const_cast<float *>(in{{i}}),{% endfor %}
     };
     float *outputs[] = {
         {% for i in range(outputs) %}out{{i}},{% endfor %}
     };
-    fDsp->compute(count, inputs, outputs);
+    dsp.compute(count, inputs, outputs);
 }
 
 const char *{{Identifier}}::parameter_label(unsigned index) noexcept
@@ -207,10 +216,11 @@ bool {{Identifier}}::parameter_is_logarithmic(unsigned index) noexcept
 
 float {{Identifier}}::get_parameter(unsigned index) const noexcept
 {
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     switch (index) {
     {% for w in active %}
     case {{loop.index}}:
-        return fDsp->{{w.var}};
+        return dsp.{{w.var}};
     {% endfor %}
     default:
         return 0;
@@ -219,10 +229,11 @@ float {{Identifier}}::get_parameter(unsigned index) const noexcept
 
 void {{Identifier}}::set_parameter(unsigned index, float value) noexcept
 {
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     switch (index) {
     {% for w in active %}
     case {{loop.index}}:
-        fDsp->{{w.var}} = value;
+        dsp.{{w.var}} = value;
         break;
     {% endfor %}
     default:
@@ -234,11 +245,13 @@ void {{Identifier}}::set_parameter(unsigned index, float value) noexcept
 {% for w in active %}
 float {{Identifier}}::get_{{cid(default(w.meta.symbol,w.label))}}() const noexcept
 {
-    return fDsp->{{w.var}};
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
+    return dsp.{{w.var}};
 }
 
 void {{Identifier}}::set_{{cid(default(w.meta.symbol,w.label))}}(float value) noexcept
 {
-    fDsp->{{w.var}} = value;
+    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
+    dsp.{{w.var}} = value;
 }
 {% endfor %}

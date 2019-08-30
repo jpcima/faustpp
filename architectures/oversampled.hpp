@@ -16,8 +16,6 @@
 
 #include <memory>
 
-class {{class_name}};
-
 class {{Identifier}} {
 public:
     {{Identifier}}();
@@ -69,8 +67,11 @@ private:
     void process_segment(const float *const inputs[], float *const outputs[], unsigned count) noexcept;
     {% endif %}
 
+public:
+    class BasicDsp;
+
 private:
-    std::unique_ptr<{{class_name}}> fDsp;
+    std::unique_ptr<BasicDsp> fDsp;
 
     {% if Oversampling >= 2 %}
     struct Oversampler;

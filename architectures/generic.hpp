@@ -16,8 +16,6 @@
 
 #include <memory>
 
-class {{class_name}};
-
 class {{Identifier}} {
 public:
     {{Identifier}}();
@@ -64,8 +62,11 @@ public:
     void set_{{cid(default(w.meta.symbol,w.label))}}(float value) noexcept;
     {% endfor %}
 
+public:
+    class BasicDsp;
+
 private:
-    std::unique_ptr<{{class_name}}> fDsp;
+    std::unique_ptr<BasicDsp> fDsp;
 };
 
 #endif // {{Identifier}}_Faust_pp_Gen_HPP_

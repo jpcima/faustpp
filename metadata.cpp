@@ -6,6 +6,7 @@
 #define __STDC_FORMAT_MACROS 1
 #include "metadata.h"
 #include "messages.h"
+#include <regex>
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
@@ -66,8 +67,8 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
         std::string line;
         line.reserve(1024);
 
-        bool isInIntrinsic = false;
-        bool isInClass = false;
+        bool is_in_intrinsic = false;
+        bool is_in_class = false;
 
         std::string &icode = md.intrinsic_code;
         std::string &ccode = md.class_code;
@@ -98,29 +99,65 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
             "#endif" "\n"
             "\n");
 
+        // add our namespace definitions
+        ccode.append(
+            "#ifndef FAUSTPP_BEGIN_NAMESPACE" "\n"
+            "#   define FAUSTPP_BEGIN_NAMESPACE" "\n"
+            "#endif" "\n"
+            "#ifndef FAUSTPP_END_NAMESPACE" "\n"
+            "#   define FAUSTPP_END_NAMESPACE" "\n"
+            "#endif" "\n"
+            "\n");
+
+        // open the namespace
+        ccode.append(
+            "FAUSTPP_BEGIN_NAMESPACE" "\n"
+            "\n");
+        bool is_in_namespace = true;
+
+        static const std::regex re_include(
+            "^\\s*#\\s*include\\s+(.*)$");
+
         std::istringstream in(*mdsource);
         while (std::getline(in, line)) {
-            if (isInIntrinsic) {
+            if (is_in_intrinsic) {
                 if (line == "<<<<EndFaustIntrinsic>>>>")
-                    isInIntrinsic = false;
+                    is_in_intrinsic = false;
                 else {
                     icode.append(line);
                     icode.push_back('\n');
                 }
             }
-            else if (isInClass) {
+            else if (is_in_class) {
                 if (line == "<<<<EndFaustClass>>>>")
-                    isInClass = false;
+                    is_in_class = false;
                 else {
+                    // make sure not to enclose #include in the namespace
+                    bool is_include = std::regex_match(line, re_include);
+                    if (is_include && is_in_namespace) {
+                        ccode.append("FAUSTPP_END_NAMESPACE" "\n");
+                        is_in_namespace = false;
+                    }
+                    else if (!is_include && !is_in_namespace) {
+                        ccode.append("FAUSTPP_BEGIN_NAMESPACE" "\n");
+                        is_in_namespace = true;
+                    }
+
                     ccode.append(line);
                     ccode.push_back('\n');
                 }
             }
             else if (line == "<<<<BeginFaustIntrinsic>>>>")
-                isInIntrinsic = true;
+                is_in_intrinsic = true;
             else if (line == "<<<<BeginFaustClass>>>>")
-                isInClass = true;
+                is_in_class = true;
         }
+
+        // close the namespace
+        if (is_in_namespace)
+            ccode.append(
+                "FAUSTPP_END_NAMESPACE" "\n"
+                "\n");
 
         // add our warning suppressions
         ccode.append(
