@@ -16,6 +16,8 @@
 //------------------------------------------------------------------------------
 // Begin the Faust code section
 
+namespace {
+
 template <class T> inline T min(T a, T b) { return (a < b) ? a : b; }
 template <class T> inline T max(T a, T b) { return (a > b) ? a : b; }
 
@@ -43,6 +45,8 @@ public:
 class dsp {
 public:
 };
+
+} // namespace
 
 #define FAUSTPP_VIRTUAL // do not declare any methods virtual
 #define FAUSTPP_PRIVATE public // do not hide any members
