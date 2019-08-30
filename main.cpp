@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
 
 #if defined(_WIN32)
     #include <windows.h>
@@ -22,6 +23,8 @@
     #include <sys/stat.h>
     #include <unistd.h>
 #endif
+
+static const char *g_argv0;
 
 struct Cmd_Args {
     std::string tmplfile;
@@ -32,10 +35,13 @@ struct Cmd_Args {
 
 static void display_usage();
 static int do_cmdline(Cmd_Args &cmd, int argc, char *argv[]);
+static std::string find_template_file(const std::string &name);
 static std::string get_tempfile_location(const std::string &name);
 
 int main(int argc, char *argv[])
 {
+    g_argv0 = argv[0];
+
     Cmd_Args cmd;
     if (do_cmdline(cmd, argc, argv) == -1) {
         display_usage();
@@ -44,6 +50,12 @@ int main(int argc, char *argv[])
 
     if (cmd.tmplfile.empty()) {
         errs() << "No architecture file has been specified.\n";
+        return -1;
+    }
+
+    cmd.tmplfile = find_template_file(cmd.tmplfile);
+    if (cmd.tmplfile.empty()) {
+        errs() << "Cannot find the architecture file.\n";
         return -1;
     }
 
@@ -180,6 +192,43 @@ static int do_cmdline(Cmd_Args &cmd, int argc, char *argv[])
     }
 
     return 0;
+}
+
+static std::string find_template_file(const std::string &name)
+{
+    if (access(name.c_str(), F_OK) == 0)
+        return name;
+
+    // second candidate: look in the installed architectures directory
+
+#ifndef _WIN32
+    auto is_path_separator = [](char c) { return c == '/'; };
+#else
+    auto is_path_separator = [](char c) { return c == '/' || c == '\\'; };
+#endif
+
+    if (std::find_if(name.begin(), name.end(), is_path_separator) != name.end())
+        return std::string{};
+
+    std::string base_dir = g_argv0;
+    while (!base_dir.empty() && !is_path_separator(base_dir.back()))
+        base_dir.pop_back();
+    while (!base_dir.empty() && is_path_separator(base_dir.back()))
+        base_dir.pop_back();
+
+    std::string name2;
+    if (base_dir.size() >= 3 && !memcmp(&base_dir[base_dir.size() - 3], "bin", 3) &&
+        (base_dir.size() == 3 || is_path_separator(base_dir[base_dir.size() - 4])))
+    {
+        name2.append(base_dir.data(), base_dir.size() - 3);
+        name2.append("share/faustpp/architectures/");
+        name2.append(name);
+    }
+
+    if (name2.empty() || access(name2.c_str(), F_OK) != 0)
+        return std::string{};
+
+    return name2;
 }
 
 static std::string get_tempfile_location(const std::string &name)
