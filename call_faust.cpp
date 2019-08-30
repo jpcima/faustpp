@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <spawn.h>
 #include <unistd.h>
+#include <map>
 #include <fstream>
 #include <random>
 #include <regex>
