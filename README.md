@@ -14,7 +14,9 @@ Custom metadata can be handled by the template mechanism.
 
 ## Usage
 
-No documentation yet, but an example is provided in the `architectures` directory.
+For detailed information, refer to the manual located under the `docs` directory.
+
+An example is provided in the `architectures` directory.
 It is usable and illustrates many features.
 
 The example is able to create a custom processor class. It has these abilities:
