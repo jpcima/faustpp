@@ -60,8 +60,10 @@ int main(int argc, char *argv[])
 
     {
         gsl::cstring_span text =
-            "<<<<BeginFaustIntrinsic>>>>\n" "<<includeIntrinsic>>\n" "<<<<EndFaustIntrinsic>>>>\n"
-            "<<<<BeginFaustClass>>>>\n" "<<includeclass>>\n" "<<<<EndFaustClass>>>>\n";
+            "<<<<BeginFaustClass>>>>\n"
+            "<<includeIntrinsic>>\n"
+            "<<includeclass>>\n"
+            "<<<<EndFaustClass>>>>\n";
         mds.write(text.data(), text.size());
         mds.flush();
         if (!mds) {

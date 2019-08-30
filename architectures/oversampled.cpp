@@ -96,7 +96,6 @@ static_assert(
     gOversampling == 8 || gOversampling == 16,
     "This oversampling factor is not supported.");
 
-{{intrinsic_code}}
 {{class_code}}
 
 //------------------------------------------------------------------------------

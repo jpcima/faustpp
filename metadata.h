@@ -52,7 +52,6 @@ struct Metadata {
     std::vector<Widget> active;
     std::vector<Widget> passive;
 
-    std::string intrinsic_code;
     std::string class_code;
 };
 

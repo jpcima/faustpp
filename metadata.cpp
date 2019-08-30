@@ -67,14 +67,10 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
         std::string line;
         line.reserve(1024);
 
-        bool is_in_intrinsic = false;
         bool is_in_class = false;
 
-        std::string &icode = md.intrinsic_code;
         std::string &ccode = md.class_code;
 
-        icode.clear();
-        icode.reserve(8192);
         ccode.clear();
         ccode.reserve(8192);
 
@@ -120,15 +116,7 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
 
         std::istringstream in(*mdsource);
         while (std::getline(in, line)) {
-            if (is_in_intrinsic) {
-                if (line == "<<<<EndFaustIntrinsic>>>>")
-                    is_in_intrinsic = false;
-                else {
-                    icode.append(line);
-                    icode.push_back('\n');
-                }
-            }
-            else if (is_in_class) {
+            if (is_in_class) {
                 if (line == "<<<<EndFaustClass>>>>")
                     is_in_class = false;
                 else {
@@ -147,8 +135,6 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
                     ccode.push_back('\n');
                 }
             }
-            else if (line == "<<<<BeginFaustIntrinsic>>>>")
-                is_in_intrinsic = true;
             else if (line == "<<<<BeginFaustClass>>>>")
                 is_in_class = true;
         }
@@ -355,7 +341,6 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
 
     nlohmann::json root_obj;
 
-    root_obj["intrinsic_code"] = md.intrinsic_code;
     root_obj["class_code"] = md.class_code;
 
     root_obj["name"] = md.name;

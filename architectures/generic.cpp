@@ -58,7 +58,6 @@ typedef {{Identifier}}::BasicDsp dsp;
 #define FAUSTPP_BEGIN_NAMESPACE namespace {
 #define FAUSTPP_END_NAMESPACE }
 
-{{intrinsic_code}}
 {{class_code}}
 
 //------------------------------------------------------------------------------
