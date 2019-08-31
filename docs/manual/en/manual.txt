@@ -88,19 +88,19 @@ The name of the generated class which wraps the processing code of the Faust mod
 [#generic-metadata]
 ==== Metadata
 
-`Widget.symbol`::
+`Widget.meta.symbol`::
 The C-style identifier which names the control in the generated code, and its getter/setter pair. *[String]* +
 The name is also adequate for use with the `lv2:symbol` property of the LV2 plugin specification.
 
-`Widget.trigger`::
+`Widget.meta.trigger`::
 This indicates that the widget works like a trigger, similarly to the `button` widget. *[Boolean]* +
 Setting this property on `hslider` or `vslider` allows to define the value domain.
 
-`Widget.boolean`::
+`Widget.meta.boolean`::
 This indicates that the widget works like a boolean, similarly to the `checkbox` widget. *[Boolean]* +
 Setting this property on `hslider` or `vslider` allows to define the value domain and the initial value.
 
-`Widget.integer`::
+`Widget.meta.integer`::
 This indicates that the widget is valued on an integer scale. *[Boolean]*
 
 === The oversampled template

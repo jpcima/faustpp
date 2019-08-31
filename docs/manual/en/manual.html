@@ -630,22 +630,22 @@ The templates are located under the <code>architectures</code> folder of the sof
 <h4 id="generic-metadata">Metadata</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>Widget.symbol</code></dt>
+<dt class="hdlist1"><code>Widget.meta.symbol</code></dt>
 <dd>
 <p>The C-style identifier which names the control in the generated code, and its getter/setter pair. <strong>[String]</strong><br>
 The name is also adequate for use with the <code>lv2:symbol</code> property of the LV2 plugin specification.</p>
 </dd>
-<dt class="hdlist1"><code>Widget.trigger</code></dt>
+<dt class="hdlist1"><code>Widget.meta.trigger</code></dt>
 <dd>
 <p>This indicates that the widget works like a trigger, similarly to the <code>button</code> widget. <strong>[Boolean]</strong><br>
 Setting this property on <code>hslider</code> or <code>vslider</code> allows to define the value domain.</p>
 </dd>
-<dt class="hdlist1"><code>Widget.boolean</code></dt>
+<dt class="hdlist1"><code>Widget.meta.boolean</code></dt>
 <dd>
 <p>This indicates that the widget works like a boolean, similarly to the <code>checkbox</code> widget. <strong>[Boolean]</strong><br>
 Setting this property on <code>hslider</code> or <code>vslider</code> allows to define the value domain and the initial value.</p>
 </dd>
-<dt class="hdlist1"><code>Widget.integer</code></dt>
+<dt class="hdlist1"><code>Widget.meta.integer</code></dt>
 <dd>
 <p>This indicates that the widget is valued on an integer scale. <strong>[Boolean]</strong></p>
 </dd>
@@ -957,7 +957,7 @@ match with <code>FAUSTPP_BEGIN_NAMESPACE</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br>
-Last updated 2019-08-31 01:38:44 +0200
+Last updated 2019-08-31 03:19:50 +0200
 </div>
 </div>
 </body>
