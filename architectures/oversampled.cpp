@@ -233,7 +233,7 @@ void {{Identifier}}::process_segment(const float *const inputs[], float *const o
     }
 
     for (unsigned channel = 0; channel < {{outputs}}; ++channel) {
-        float *curr = &fOversampler->fWorkBuffer[(channel + {{inputs}}) * (gOversampling * 2 * MaximumFrames)];
+        float *curr = &fOversampler->fWorkBuffer[(channel + {{inputs}}) * (2 * gOversampling * MaximumFrames)];
         outputsUp[channel] = curr;
     }
 
