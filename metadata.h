@@ -4,7 +4,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include "pugixml/pugixml.hpp"
+#include "pugixml.hpp"
 #include "gsl/gsl-lite.hpp"
 #include <string>
 #include <vector>

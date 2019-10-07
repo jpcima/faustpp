@@ -10,6 +10,12 @@ addons:
       - pkg-config
       - faust
       - libjack-dev
+      - libboost-dev
+      - libboost-filesystem-dev
+      - libboost-system-dev
 script:
-  - make
-  - make -C examples
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DFAUSTPP_LINK_STATIC_BOOST=ON -DFAUSTPP_BUILD_EXAMPLES=ON ..
+  - cd ..
+  - make -C build

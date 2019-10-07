@@ -37,7 +37,7 @@ int main()
     if (!(
         {% for i in range(inputs) %}
         (jack.port_in[{{i}}] = jack_port_register(jack.client, "in_{{i}}", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))
-        {% if not loop.is_last %}&&{% endif %}
+        {% if not loop.last %}&&{% endif %}
         {% endfor %})) {
         fprintf(stderr, "Cannot register JACK inputs.\n");
         jack_client_close(jack.client);
@@ -49,7 +49,7 @@ int main()
     if (!(
         {% for i in range(outputs) %}
         (jack.port_out[{{i}}] = jack_port_register(jack.client, "out_{{i}}", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0))
-        {% if not loop.is_last %}&&{% endif %}
+        {% if not loop.last %}&&{% endif %}
         {% endfor %})) {
         fprintf(stderr, "Cannot register JACK outputs.\n");
         jack_client_close(jack.client);

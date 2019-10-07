@@ -250,6 +250,10 @@ static const std::string cstrlit(gsl::cstring_span text)
 static const std::string mangle(gsl::cstring_span name)
 {
     std::string id;
+
+    if (name.empty())
+        name = "_";
+
     size_t n = name.size();
     id.reserve(n);
 
@@ -327,36 +331,99 @@ std::ostream &operator<<(std::ostream &o, Metadata::Widget::Scale s)
 }
 
 //------------------------------------------------------------------------------
-#include "inja/inja.hpp"
+#include "jinja2cpp/template.h"
+#include "jinja2cpp/template_env.h"
+#include "jinja2cpp/user_callable.h"
+#include "jinja2cpp/string_helpers.h"
+#include "jinja2cpp/generic_list.h"
+#include "jinja2cpp/generic_list_iterator.h"
+#include "jinja2cpp/filesystem_handler.h"
 
-static void json_value_from_string_assign(
-    nlohmann::json::reference dest, const std::string &value)
-{
-    unsigned n;
-    int64_t i;
-    uint64_t u;
-    double f;
-    if (sscanf(value.c_str(), "%" SCNi64 "%n", &i, &n) == 1 && n == value.size())
-        dest = i;
-    else if (sscanf(value.c_str(), "%" SCNu64 "%n", &u, &n) == 1 && n == value.size())
-        dest = u;
-    else if (sscanf(value.c_str(), "%lf%n", &f, &n) == 1 && n == value.size())
-        dest = f;
-    else
-        dest = value;
-}
+static jinja2::ValuesMap make_global_environment(
+    const Metadata &md, const std::map<std::string, std::string> &defines);
+
+#ifndef _WIN32
+static bool is_path_separator(char c) { return c == '/'; };
+#else
+static bool is_path_separator(char c) { return c == '/' || c == '\\'; };
+#endif
+
+/* exception which only us catch, not deriving std::exception */
+class RenderFailure {
+public:
+    explicit RenderFailure(std::string msg) : msg(std::move(msg)) {}
+    const std::string &message() const noexcept { return msg; }
+private:
+    std::string msg;
+};
 
 void render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines)
 {
-    inja::Environment env;
-    inja::Template tmpl = env.parse_template(tmplfile);
+    std::string tmplbase;
+    std::string tmpldir = tmplfile;
+    while (!tmpldir.empty() && !is_path_separator(tmpldir.back()))
+        tmpldir.pop_back();
+    if (!tmpldir.empty())
+        tmplbase = tmplfile.substr(tmpldir.size());
+    else {
+        tmpldir = "./";
+        tmplbase = tmplfile;
+    }
 
-    if (tmpl.content.empty()) {
-        errs() << "The template file is empty or unreadable.\n";
+    ///
+    jinja2::TemplateEnv env;
+    env.AddFilesystemHandler(
+        std::string(), jinja2::FilesystemHandlerPtr(new jinja2::RealFileSystem(tmpldir)));
+
+#if 0
+    jinja2::Settings settings = env.GetSettings();
+    settings.trimBlocks = true;
+    settings.lstripBlocks = true;
+    env.SetSettings(settings);
+#endif
+
+    auto tmpl = env.LoadTemplate(tmplbase);
+    if (!tmpl) {
+        errs() << tmpl.error() << '\n';
         return;
     }
 
-    nlohmann::json root_obj;
+    for (std::pair<const std::string, jinja2::Value> &kv : make_global_environment(md, defines))
+        env.AddGlobal(kv.first, std::move(kv.second));
+
+    try {
+        auto result = tmpl->RenderAsString(jinja2::ValuesMap{});
+        if (!result)
+            errs() << result.error() << '\n';
+        else {
+            out.write(result->data(), result->size());
+            if (result->empty() || result->back() != '\n')
+                out.put('\n');
+            out.flush();
+        }
+    }
+    catch (RenderFailure &rf) {
+        errs() << "Received error from template: " << rf.message() << '\n';
+    }
+}
+
+static jinja2::Value parse_value_string(const std::string &value)
+{
+    unsigned n;
+    int64_t i;
+    double f;
+    if (sscanf(value.c_str(), "%" SCNi64 "%n", &i, &n) == 1 && n == value.size())
+        return i;
+    else if (sscanf(value.c_str(), "%lf%n", &f, &n) == 1 && n == value.size())
+        return f;
+    else
+        return value;
+}
+
+static jinja2::ValuesMap make_global_environment(
+    const Metadata &md, const std::map<std::string, std::string> &defines)
+{
+    jinja2::ValuesMap root_obj;
 
     root_obj["class_code"] = md.class_code;
 
@@ -367,31 +434,33 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
     root_obj["version"] = md.version;
     root_obj["class_name"] = md.classname;
     root_obj["file_name"] = md.filename;
-    root_obj["inputs"] = md.inputs;
-    root_obj["outputs"] = md.outputs;
+    root_obj["inputs"] = (int64_t)md.inputs;
+    root_obj["outputs"] = (int64_t)md.outputs;
 
-    nlohmann::json &file_meta = root_obj["meta"];
+    jinja2::ValuesMap &file_meta = (root_obj["meta"] = jinja2::ValuesMap()).asMap();
     for (const auto &meta : md.metadata)
-        json_value_from_string_assign(file_meta[meta.first], meta.second);
+        file_meta[meta.first] = parse_value_string(meta.second);
 
     for (unsigned wtype = 0; wtype < 2; ++wtype) {
         const std::vector<Metadata::Widget> *widget_list = nullptr;
-        nlohmann::json *widget_list_obj;
+        jinja2::ValuesList *widget_list_obj;
 
         if (wtype == 0) {
             widget_list = &md.active;
-            widget_list_obj = &root_obj["active"];
+            widget_list_obj = &((root_obj["active"] = jinja2::ValuesList()).asList());
         }
         else if (wtype == 1) {
             widget_list = &md.passive;
-            widget_list_obj = &root_obj["passive"];
+            widget_list_obj = &((root_obj["passive"] = jinja2::ValuesList()).asList());
         }
 
         assert(widget_list);
 
         for (size_t i = 0, n = widget_list->size(); i < n; ++i) {
             const Metadata::Widget &widget = (*widget_list)[i];
-            nlohmann::json &widget_obj = widget_list_obj->emplace_back();
+
+            jinja2::ValuesMap &widget_obj = (widget_list_obj->emplace_back(jinja2::ValuesMap()),
+                                             widget_list_obj->back()).asMap();
 
             widget_obj["type"] = widget.typestring;
             widget_obj["id"] = widget.id;
@@ -405,25 +474,31 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
             widget_obj["scale"] = widget.scalestring;
             widget_obj["tooltip"] = widget.tooltip;
 
-            nlohmann::json &widget_meta = widget_obj["meta"];
+            jinja2::ValuesMap &widget_meta = (widget_obj["meta"] = jinja2::ValuesMap()).asMap();
             for (const auto &meta : widget.metadata)
-                json_value_from_string_assign(widget_meta[meta.first], meta.second);
+                widget_meta[meta.first] = parse_value_string(meta.second);
         }
     }
 
-    env.add_callback(
-        "cstr", 1,
-        [](inja::Arguments &args) -> std::string {
-            return cstrlit(args.at(0)->get<std::string>());
-        });
-    env.add_callback(
-        "cid", 1,
-        [](inja::Arguments &args) -> std::string {
-            return mangle(args.at(0)->get<std::string>());
-        });
+    root_obj["cstr"] = jinja2::MakeCallable(
+        [](const nonstd::string_view &x) -> std::string { return cstrlit(x); },
+        jinja2::ArgInfo("x", true));
+
+    root_obj["cid"] = jinja2::MakeCallable(
+        [](const nonstd::string_view &x) -> std::string { return mangle(x); },
+        jinja2::ArgInfo("x", true));
+
+    root_obj["fail"] = jinja2::MakeCallable(
+        [](nonstd::string_view x) -> nonstd::string_view
+        {
+            if (x.empty())
+                x = "failure without a message";
+            throw RenderFailure(x.to_string());
+        },
+        jinja2::ArgInfo("x", false, nonstd::string_view()));
 
     for (auto &def : defines)
-        json_value_from_string_assign(root_obj[def.first], def.second);
+        root_obj[def.first] = parse_value_string(def.second);
 
-    env.render_to(out, tmpl, root_obj);
+    return root_obj;
 }

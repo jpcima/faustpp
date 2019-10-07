@@ -10,6 +10,11 @@
 // Version: {{version}}
 //------------------------------------------------------------------------------
 
+{% if not (Identifier is defined and
+           Identifier == cid(Identifier)) %}
+{{fail("`Identifier` is undefined or invalid.")}}
+{% endif %}
+
 #pragma once
 #ifndef {{Identifier}}_Faust_pp_Gen_HPP_
 #define {{Identifier}}_Faust_pp_Gen_HPP_
@@ -31,10 +36,10 @@ public:
 
     enum { NumInputs = {{inputs}} };
     enum { NumOutputs = {{outputs}} };
-    enum { NumParameters = {{length(active)}} };
+    enum { NumParameters = {{active|length}} };
 
     enum Parameter {
-        {% for w in active %}p_{{cid(default(w.meta.symbol,w.label))}},
+        {% for w in active %}p_{{cid(w.meta.symbol|default(w.label))}},
         {% endfor %}
     };
 
@@ -58,8 +63,8 @@ public:
     void set_parameter(unsigned index, float value) noexcept;
 
     {% for w in active %}
-    float get_{{cid(default(w.meta.symbol,w.label))}}() const noexcept;
-    void set_{{cid(default(w.meta.symbol,w.label))}}(float value) noexcept;
+    float get_{{cid(w.meta.symbol|default(w.label))}}() const noexcept;
+    void set_{{cid(w.meta.symbol|default(w.label))}}(float value) noexcept;
     {% endfor %}
 
 public:

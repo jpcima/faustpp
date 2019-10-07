@@ -1,0 +1,18 @@
+[submodule "thirdparty/jinja2cpp"]
+	path = thirdparty/jinja2cpp
+	url = https://github.com/jinja2cpp/Jinja2Cpp.git
+[submodule "thirdparty/optional-lite"]
+	path = thirdparty/optional-lite
+	url = https://github.com/martinmoene/optional-lite.git
+[submodule "thirdparty/variant-lite"]
+	path = thirdparty/variant-lite
+	url = https://github.com/martinmoene/variant-lite.git
+[submodule "thirdparty/string-view-lite"]
+	path = thirdparty/string-view-lite
+	url = https://github.com/martinmoene/string-view-lite.git
+[submodule "thirdparty/expected-lite"]
+	path = thirdparty/expected-lite
+	url = https://github.com/martinmoene/expected-lite.git
+[submodule "thirdparty/fmt"]
+	path = thirdparty/fmt
+	url = https://github.com/fmtlib/fmt.git

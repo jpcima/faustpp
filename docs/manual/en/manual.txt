@@ -27,7 +27,7 @@ in a separate compilation model, without violating the _DRY principle_ ("Don't r
 These units also offer some introspection abilities, whose model is dynamic rather than static, which may be considered unpractical.
 
 The novelty of this post-processor over Faust is to substitute the concept of _architectures_, used to generate many flavors of programs,
-with _architecture templates_ whose processing is backed by a https://github.com/pantor/inja[templating engine].
+with _architecture templates_ whose processing is backed by a https://jinja.palletsprojects.com/[templating engine].
 The concepts are quite similiar, except templates allow to express it with greater power.
 
 == Quick start
@@ -51,7 +51,7 @@ These options are *required*:
 
 The program may be invoked with the following options:
 
-* `-a <architecture-file>`: selects the architecture file to use. This is a template file expressed in https://github.com/pantor/inja[Inja] syntax.
+* `-a <architecture-file>`: selects the architecture file to use. This is a template file expressed in https://jinja.palletsprojects.com/[Jinja2] syntax.
 * `-D<name=value>`: defines a variable in the environment of the template engine, to modify the behavior of the generation.
 * `-X<faust-arg>`: passes the `faust-arg` argument to the Faust compiler. These arguments are passed to the compiler in the same order as they are specified.
 For example, if you want to enable double precision processing, pass `-X-double`.
@@ -126,7 +126,7 @@ See also <<generic-metadata,Generic template metadata>>.
 
 == Creating architecture templates
 
-The template files are expressed in https://github.com/pantor/inja[Inja] syntax.
+The template files are expressed in https://jinja.palletsprojects.com/[Jinja2] syntax.
 
 These files are mostly comprised of static text, and particular tags inside of it which are interpreted by the templating engine,
 

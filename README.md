@@ -8,7 +8,7 @@ This is a source transformation tool based on the [Faust compiler](https://faust
 
 It permits to arrange the way how faust source is generated with greater flexibility.
 
-Using a template language known as [Inja](https://github.com/pantor/inja), it is allowed to manipulate
+Using a template language known as [Jinja2](https://jinja.palletsprojects.com/), it is allowed to manipulate
 metadata with iteration and conditional constructs, to easily generate custom code tailored for the job.
 Custom metadata can be handled by the template mechanism.
 

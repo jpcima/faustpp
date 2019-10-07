@@ -505,7 +505,7 @@ These units also offer some introspection abilities, whose model is dynamic rath
 </div>
 <div class="paragraph">
 <p>The novelty of this post-processor over Faust is to substitute the concept of <em>architectures</em>, used to generate many flavors of programs,
-with <em>architecture templates</em> whose processing is backed by a <a href="https://github.com/pantor/inja">templating engine</a>.
+with <em>architecture templates</em> whose processing is backed by a <a href="https://jinja.palletsprojects.com/">templating engine</a>.
 The concepts are quite similiar, except templates allow to express it with greater power.</p>
 </div>
 </div>
@@ -550,7 +550,7 @@ faustpp -DIdentifier=MyEffect -a generic.hpp MyEffect.dsp &gt; MyEffect.hpp</pre
 <div class="ulist">
 <ul>
 <li>
-<p><code>-a &lt;architecture-file&gt;</code>: selects the architecture file to use. This is a template file expressed in <a href="https://github.com/pantor/inja">Inja</a> syntax.</p>
+<p><code>-a &lt;architecture-file&gt;</code>: selects the architecture file to use. This is a template file expressed in <a href="https://jinja.palletsprojects.com/">Jinja2</a> syntax.</p>
 </li>
 <li>
 <p><code>-D&lt;name=value&gt;</code>: defines a variable in the environment of the template engine, to modify the behavior of the generation.</p>
@@ -693,7 +693,7 @@ except it implements transparent oversampling by a fixed factor.</p>
 <h2 id="_creating_architecture_templates">Creating architecture templates</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The template files are expressed in <a href="https://github.com/pantor/inja">Inja</a> syntax.</p>
+<p>The template files are expressed in <a href="https://jinja.palletsprojects.com/">Jinja2</a> syntax.</p>
 </div>
 <div class="paragraph">
 <p>These files are mostly comprised of static text, and particular tags inside of it which are interpreted by the templating engine,</p>
@@ -957,7 +957,7 @@ match with <code>FAUSTPP_BEGIN_NAMESPACE</code>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.0<br>
-Last updated 2019-08-31 03:19:50 +0200
+Last updated 2019-10-13 17:09:43 +0200
 </div>
 </div>
 </body>

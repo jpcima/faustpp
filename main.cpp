@@ -6,7 +6,7 @@
 #include "metadata.h"
 #include "call_faust.h"
 #include "messages.h"
-#include "pugixml/pugixml.hpp"
+#include "pugixml.hpp"
 #include "gsl/gsl-lite.hpp"
 #include <string>
 #include <vector>
