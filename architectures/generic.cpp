@@ -1,3 +1,4 @@
+{% block ImplementationLicenseBlock %}
 //------------------------------------------------------------------------------
 // This file was generated using the Faust compiler (https://faust.grame.fr),
 // and the Faust post-processor (https://github.com/jpcima/faustpp).
@@ -9,13 +10,21 @@
 // License: {{license}}
 // Version: {{version}}
 //------------------------------------------------------------------------------
+{% endblock %}
 
+{% block ImplementationPrologue %}
 {% if not (Identifier is defined and
            Identifier == cid(Identifier)) %}
 {{fail("`Identifier` is undefined or invalid.")}}
 {% endif %}
+{% endblock %}
 
+{% block ImplementationIncludeHeader %}
 #include "{{Identifier}}.hpp"
+{% endblock %}
+{% block ImplementationIncludeExtra %}
+{% endblock %}
+#include <utility>
 #include <cmath>
 
 class {{Identifier}}::BasicDsp {
@@ -63,16 +72,23 @@ typedef {{Identifier}}::BasicDsp dsp;
 #define FAUSTPP_BEGIN_NAMESPACE namespace {
 #define FAUSTPP_END_NAMESPACE }
 
+{% block ImplementationFaustCode %}
 {{class_code}}
+{% endblock %}
 
 //------------------------------------------------------------------------------
 // End the Faust code section
 
+{% block ImplementationBeforeClassDefs %}
+{% endblock %}
+
 {{Identifier}}::{{Identifier}}()
-    : fDsp(new {{class_name}})
 {
-    {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
-    dsp.instanceResetUserInterface();
+{% block ImplementationSetupDsp %}
+    {{class_name}} *dsp = new {{class_name}};
+    fDsp.reset(dsp);
+    dsp->instanceResetUserInterface();
+{% endblock %}
 }
 
 {{Identifier}}::~{{Identifier}}()
@@ -81,16 +97,20 @@ typedef {{Identifier}}::BasicDsp dsp;
 
 void {{Identifier}}::init(float sample_rate)
 {
+{% block ImplementationInitDsp %}
     {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     dsp.classInit(sample_rate);
     dsp.instanceConstants(sample_rate);
-    dsp.instanceClear();
+    clear();
+{% endblock %}
 }
 
 void {{Identifier}}::clear() noexcept
 {
+{% block ImplementationClearDsp %}
     {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     dsp.instanceClear();
+{% endblock %}
 }
 
 void {{Identifier}}::process(
@@ -98,6 +118,7 @@ void {{Identifier}}::process(
     {% for i in range(outputs) %}float *out{{i}},{% endfor %}
     unsigned count) noexcept
 {
+{% block ImplementationProcessDsp %}
     {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     float *inputs[] = {
         {% for i in range(inputs) %}const_cast<float *>(in{{i}}),{% endfor %}
@@ -106,6 +127,7 @@ void {{Identifier}}::process(
         {% for i in range(outputs) %}out{{i}},{% endfor %}
     };
     dsp.compute(count, inputs, outputs);
+{% endblock %}
 }
 
 const char *{{Identifier}}::parameter_label(unsigned index) noexcept
@@ -263,3 +285,6 @@ void {{Identifier}}::set_{{cid(w.meta.symbol|default(w.label))}}(float value) no
     dsp.{{w.var}} = value;
 }
 {% endfor %}
+
+{% block ImplementationEpilogue %}
+{% endblock %}

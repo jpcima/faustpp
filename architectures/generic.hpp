@@ -1,3 +1,4 @@
+{% block HeaderLicenseBlock %}
 //------------------------------------------------------------------------------
 // This file was generated using the Faust compiler (https://faust.grame.fr),
 // and the Faust post-processor (https://github.com/jpcima/faustpp).
@@ -9,11 +10,14 @@
 // License: {{license}}
 // Version: {{version}}
 //------------------------------------------------------------------------------
+{% endblock %}
 
+{% block HeaderPrologue %}
 {% if not (Identifier is defined and
            Identifier == cid(Identifier)) %}
 {{fail("`Identifier` is undefined or invalid.")}}
 {% endif %}
+{% endblock %}
 
 #pragma once
 #ifndef {{Identifier}}_Faust_pp_Gen_HPP_
@@ -72,6 +76,12 @@ public:
 
 private:
     std::unique_ptr<BasicDsp> fDsp;
+
+{% block ClassExtraDecls %}
+{% endblock %}
 };
+
+{% block HeaderEpilogue %}
+{% endblock %}
 
 #endif // {{Identifier}}_Faust_pp_Gen_HPP_
