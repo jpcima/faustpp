@@ -1,6 +1,6 @@
 {% extends "generic.cpp" %}
 
-{% block ImplementationLicenseBlock %}
+{% block ImplementationDescription %}
 {{super()}}
 //------------------------------------------------------------------------------
 // Oversampling filters reused from iPlug2 source code
