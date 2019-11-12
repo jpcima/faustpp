@@ -53,6 +53,11 @@ target_link_libraries(boost-filesystem
   INTERFACE "${Boost_FILESYSTEM_LIBRARY}"
   INTERFACE boost)
 
+# rapidjson
+add_library(rapidjson INTERFACE)
+target_include_directories(rapidjson
+  INTERFACE "thirdparty/rapidjson/include")
+
 # jinja2
 add_library(jinja2 STATIC EXCLUDE_FROM_ALL
   "thirdparty/jinja2cpp/src/internal_value.cpp"
@@ -63,7 +68,9 @@ add_library(jinja2 STATIC EXCLUDE_FROM_ALL
   "thirdparty/jinja2cpp/src/testers.cpp"
   "thirdparty/jinja2cpp/src/value.cpp"
   "thirdparty/jinja2cpp/src/statements.cpp"
+  "thirdparty/jinja2cpp/src/rapid_json_serializer.cpp"
   "thirdparty/jinja2cpp/src/string_converter_filter.cpp"
+  "thirdparty/jinja2cpp/src/serialize_filters.cpp"
   "thirdparty/jinja2cpp/src/lexer.cpp"
   "thirdparty/jinja2cpp/src/template_parser.cpp"
   "thirdparty/jinja2cpp/src/expression_parser.cpp"
@@ -74,6 +81,7 @@ target_include_directories(jinja2
 target_link_libraries(jinja2
   PUBLIC nonstd
   PUBLIC fmt
+  PUBLIC rapidjson
   PUBLIC boost-filesystem
   PUBLIC boost-system)
 
