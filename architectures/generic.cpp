@@ -133,7 +133,7 @@ void {{Identifier}}::process(
 const char *{{Identifier}}::parameter_label(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}
+    {% for w in active + passive %}
     case {{loop.index0}}:
         return {{cstr(w.label)}};
     {% endfor %}
@@ -145,7 +145,7 @@ const char *{{Identifier}}::parameter_label(unsigned index) noexcept
 const char *{{Identifier}}::parameter_short_label(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}
+    {% for w in active + passive %}
     case {{loop.index0}}:
         return {{cstr(w.meta.abbrev|default(""))}};
     {% endfor %}
@@ -157,7 +157,7 @@ const char *{{Identifier}}::parameter_short_label(unsigned index) noexcept
 const char *{{Identifier}}::parameter_symbol(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}
+    {% for w in active + passive %}
     case {{loop.index0}}:
         return {{cstr(cid(w.meta.symbol|default(w.label)))}};
     {% endfor %}
@@ -169,7 +169,7 @@ const char *{{Identifier}}::parameter_symbol(unsigned index) noexcept
 const char *{{Identifier}}::parameter_unit(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}
+    {% for w in active + passive %}
     case {{loop.index0}}:
         return {{cstr(w.unit)}};
     {% endfor %}
@@ -181,7 +181,7 @@ const char *{{Identifier}}::parameter_unit(unsigned index) noexcept
 const {{Identifier}}::ParameterRange *{{Identifier}}::parameter_range(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}
+    {% for w in active + passive %}
     case {{loop.index0}}: {
         static const ParameterRange range = { {{w.init}}, {{w.min}}, {{w.max}} };
         return &range;
@@ -195,8 +195,8 @@ const {{Identifier}}::ParameterRange *{{Identifier}}::parameter_range(unsigned i
 bool {{Identifier}}::parameter_is_trigger(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}{% if w.type in ["button"] or
-                               w.meta.trigger is defined %}
+    {% for w in active + passive %}{% if w.type in ["button"] or
+                                         w.meta.trigger is defined %}
     case {{loop.index0}}:
         return true;
     {% endif %}{% endfor %}
@@ -208,8 +208,8 @@ bool {{Identifier}}::parameter_is_trigger(unsigned index) noexcept
 bool {{Identifier}}::parameter_is_boolean(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}{% if w.type in ["button", "checkbox"] or
-                               w.meta.boolean is defined %}
+    {% for w in active + passive %}{% if w.type in ["button", "checkbox"] or
+                                         w.meta.boolean is defined %}
     case {{loop.index0}}:
         return true;
     {% endif %}{% endfor %}
@@ -221,9 +221,9 @@ bool {{Identifier}}::parameter_is_boolean(unsigned index) noexcept
 bool {{Identifier}}::parameter_is_integer(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}{% if w.type in ["button", "checkbox"] or
-                               w.meta.integer is defined or
-                               w.meta.boolean is defined %}
+    {% for w in active + passive %}{% if w.type in ["button", "checkbox"] or
+                                         w.meta.integer is defined or
+                                         w.meta.boolean is defined %}
     case {{loop.index0}}:
         return true;
     {% endif %}{% endfor %}
@@ -235,7 +235,7 @@ bool {{Identifier}}::parameter_is_integer(unsigned index) noexcept
 bool {{Identifier}}::parameter_is_logarithmic(unsigned index) noexcept
 {
     switch (index) {
-    {% for w in active %}{% if w.scale == "log" %}
+    {% for w in active + passive %}{% if w.scale == "log" %}
     case {{loop.index0}}:
         return true;
     {% endif %}{% endfor %}
@@ -248,11 +248,12 @@ float {{Identifier}}::get_parameter(unsigned index) const noexcept
 {
     {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     switch (index) {
-    {% for w in active %}
+    {% for w in active + passive %}
     case {{loop.index0}}:
         return dsp.{{w.var}};
     {% endfor %}
     default:
+        (void)dsp;
         return 0;
     }
 }
@@ -267,18 +268,20 @@ void {{Identifier}}::set_parameter(unsigned index, float value) noexcept
         break;
     {% endfor %}
     default:
+        (void)dsp;
         (void)value;
         break;
     }
 }
 
-{% for w in active %}
+{% for w in active + passive %}
 float {{Identifier}}::get_{{cid(w.meta.symbol|default(w.label))}}() const noexcept
 {
     {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
     return dsp.{{w.var}};
 }
-
+{% endfor %}
+{% for w in active %}
 void {{Identifier}}::set_{{cid(w.meta.symbol|default(w.label))}}(float value) noexcept
 {
     {{class_name}} &dsp = static_cast<{{class_name}} &>(*fDsp);
