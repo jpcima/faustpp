@@ -19,3 +19,6 @@ script:
   - cmake -DCMAKE_BUILD_TYPE=Release -DFAUSTPP_LINK_STATIC_BOOST=ON -DFAUSTPP_BUILD_EXAMPLES=ON ..
   - cd ..
   - make -C build
+
+notifications:
+  irc: "ircs://chat.freenode.net:7070/#librazik"
