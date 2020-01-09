@@ -32,7 +32,7 @@ target_include_directories(fmt
 # pugixml
 add_library(pugixml STATIC EXCLUDE_FROM_ALL
   "thirdparty/pugixml/pugixml.cpp")
-target_include_directories(fmt
+target_include_directories(pugixml
   PUBLIC "thirdparty/pugixml")
 
 # boost
