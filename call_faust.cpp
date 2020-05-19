@@ -15,6 +15,10 @@
 #include <random>
 #include <regex>
 
+extern "C" {
+    extern char **environ;
+}
+
 static int execute(char *argv[], int out_fd = -1);
 static int mktempdir(char *tmp);
 
