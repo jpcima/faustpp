@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <map>
 #include <fstream>
+#include <sstream>
 #include <random>
 #include <regex>
 
