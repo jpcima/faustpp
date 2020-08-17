@@ -18,10 +18,17 @@ struct Metadata {
     std::string license;
     std::string version;
     std::string classname;
+    std::string processname;
     std::string filename;
     std::vector<std::pair<std::string, std::string>> metadata;
-    unsigned inputs = 0;
-    unsigned outputs = 0;
+
+    struct IO {
+        std::string name;
+        std::vector<std::pair<std::string, std::string>> metadata;
+    };
+
+    std::vector<IO> inputs;
+    std::vector<IO> outputs;
 
     struct Widget {
         enum class Type { Button, CheckBox, VSlider, HSlider, NEntry, VBarGraph, HBarGraph };
@@ -55,7 +62,7 @@ struct Metadata {
     std::string class_code;
 };
 
-int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::string *mdsource);
+int extract_metadata(const std::string &dspfile, const std::string &processname, const pugi::xml_document &doc, Metadata &md, const std::string *mdsource);
 void render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines);
 
 std::ostream &operator<<(std::ostream &o, Metadata::Widget::Type t);

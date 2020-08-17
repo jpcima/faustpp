@@ -4,6 +4,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "call_faust.h"
+#include "messages.h"
 #include "gsl/gsl-lite.hpp"
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -27,6 +28,7 @@ static int apply_workarounds(pugi::xml_document &docmd, std::string &cppsource);
 //------------------------------------------------------------------------------
 int call_faust(
     const std::string &dspfile,
+    const std::string &processname,
     pugi::xml_document *docmd,
     std::string *cppsource,
     const Faust_Args &faustargs)
@@ -56,6 +58,11 @@ int call_faust(
         (char *)cppfilebase.c_str(),
         (char *)dspfile.c_str(),
     };
+
+    if (!processname.empty()) {
+        fargv.push_back((char *)"-pn");
+        fargv.push_back((char *)processname.c_str());
+    }
 
     if (docmd)
         fargv.push_back((char *)"-xml");
@@ -184,8 +191,24 @@ static int apply_workarounds(pugi::xml_document &docmd, std::string &cppsource)
 {
     pugi::xml_node root = docmd.child("faust");
 
+#if 1
+    // Note: force metadata to be extracted from the source file
+    //       because XML strips some values between brackets.
+    //       (problem present in 2.27.2)
+    // eg. `declare process input0 "Port 1 [symbol:in1]";` -> "Port 1"
+    bool has_meta = false;
+
+    // remove any existing metadata nodes
+    while (root.remove_child("meta"));
+    for (pugi::xml_node node : root.child("ui").child("activewidgets").children("widget"))
+        while (node.remove_child("meta"));
+    for (pugi::xml_node node : root.child("ui").child("passivewidgets").children("widget"))
+        while (node.remove_child("meta"));
+
+#else
     bool has_meta = root.find_node(
         [](pugi::xml_node node) -> bool { return node.name() == gsl::cstring_span("meta"); });
+#endif
 
     if (!has_meta) {
         // workaround: extract the metadata from source file

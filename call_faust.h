@@ -15,6 +15,7 @@ struct Faust_Args {
 
 int call_faust(
     const std::string &dspfile,
+    const std::string &processname,
     pugi::xml_document *docmd,
     std::string *cppsource,
     const Faust_Args &faustargs);

@@ -29,6 +29,7 @@ static const char *g_argv0;
 struct Cmd_Args {
     std::string tmplfile;
     std::string dspfile;
+    std::string processname;
     std::map<std::string, std::string> defines;
     Faust_Args faustargs;
 };
@@ -50,13 +51,18 @@ int main(int argc, char *argv[])
 
     if (cmd.tmplfile.empty()) {
         errs() << "No architecture file has been specified.\n";
-        return -1;
+        return 1;
     }
 
     cmd.tmplfile = find_template_file(cmd.tmplfile);
     if (cmd.tmplfile.empty()) {
         errs() << "Cannot find the architecture file.\n";
-        return -1;
+        return 1;
+    }
+
+    for (const std::string &arg : cmd.faustargs.compile_args) {
+        if (arg == "-pn" || arg == "--process-name")
+            warns() << "Avoid the flag `-X" << arg << "`, use `-pn` instead.\n";
     }
 
     Faust_Version faustver;
@@ -72,12 +78,12 @@ int main(int argc, char *argv[])
 
     std::string mdfile = get_tempfile_location("md.cpp");
     if (mdfile.empty())
-        return -1;
+        return 1;
 
     std::ofstream mds(mdfile);
     if (!mds) {
         errs() << "Could not open the temporary file for writing.\n";
-        return -1;
+        return 1;
     }
     auto md_cleanup = gsl::finally([&]() { unlink(mdfile.c_str()); });
 
@@ -91,7 +97,7 @@ int main(int argc, char *argv[])
         mds.flush();
         if (!mds) {
             errs() << "Could not write the temporary file.\n";
-            return -1;
+            return 1;
         }
         mds.close();
     }
@@ -102,7 +108,7 @@ int main(int argc, char *argv[])
 
     pugi::xml_document doc;
     std::string mdsource;
-    if (call_faust(cmd.dspfile, &doc, &mdsource, mdargs) == -1) {
+    if (call_faust(cmd.dspfile, cmd.processname, &doc, &mdsource, mdargs) == -1) {
         errs() << "The faust command has failed.\n";
         return 1;
     }
@@ -111,9 +117,9 @@ int main(int argc, char *argv[])
         doc.save(std::cerr);
 
     Metadata md;
-    if (extract_metadata(doc, md, &mdsource) == -1) {
+    if (extract_metadata(cmd.dspfile, cmd.processname, doc, md, &mdsource) == -1) {
         errs() << "Could not extract the faust metadata.\n";
-        return -1;
+        return 1;
     }
 
 #if !defined(_WIN32)
@@ -135,7 +141,12 @@ int main(int argc, char *argv[])
 
 static void display_usage()
 {
-    std::cerr << "Usage: faustpp [-a <architecture-file>] [-D<name=value>] [-X<faust-arg>] <file.dsp>\n";
+    std::cerr <<
+        "Usage: faustpp [-a <file>] [-D<name=value>] [-X<arg>] <file.dsp>\n"
+        "    -a <file>          Use the specified architecture file.\n"
+        "    -pn <name>         Use the specified function as the entry point.\n"
+        "    -D<name=value>     Pass a definition to the code generator.\n"
+        "    -X<arg>            Pass a raw argument to the faust compiler.\n";
 }
 
 static int do_cmdline(Cmd_Args &cmd, int argc, char *argv[])
@@ -154,6 +165,13 @@ static int do_cmdline(Cmd_Args &cmd, int argc, char *argv[])
                 return -1;
             }
             cmd.tmplfile = argv[i];
+        }
+        else if (moreflags && arg == "-pn") {
+            if (++i == argc) {
+                errs() << "The flag `-pn` requires an argument.\n";
+                return -1;
+            }
+            cmd.processname = argv[i];
         }
         else if (moreflags && arg.subspan(0, 2) == "-D") {
             gsl::cstring_span expr = arg.subspan(2);

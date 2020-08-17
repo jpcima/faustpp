@@ -6,6 +6,7 @@
 #define __STDC_FORMAT_MACROS 1
 #include "metadata.h"
 #include "messages.h"
+#include <nonstd/string_view.hpp>
 #include <regex>
 #include <iostream>
 #include <sstream>
@@ -33,8 +34,9 @@ static bool is_decint_string(gsl::cstring_span str)
 }
 
 static int extract_widget(pugi::xml_node node, bool is_active, Metadata &md);
+static int extract_io(pugi::xml_node root, const std::string &dspfile, const std::string &processname, unsigned index, bool is_output, Metadata &md);
 
-int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::string *mdsource)
+int extract_metadata(const std::string &dspfile, const std::string &processname, const pugi::xml_document &doc, Metadata &md, const std::string *mdsource)
 {
     pugi::xml_node root = doc.child("faust");
 
@@ -44,8 +46,9 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
     md.license = root.child_value("license");
     md.version = root.child_value("version");
     md.classname = root.child_value("classname");
-    md.inputs = std::stoi(root.child_value("inputs"));
-    md.outputs = std::stoi(root.child_value("outputs"));
+    md.processname = processname.empty() ? std::string("process") : processname;
+    md.inputs.resize(std::stoi(root.child_value("inputs")));
+    md.outputs.resize(std::stoi(root.child_value("outputs")));
 
     for (pugi::xml_node meta : root.children("meta")) {
         std::string key = meta.attribute("key").value();
@@ -62,6 +65,12 @@ int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::str
         if (extract_widget(node, false, md) == -1)
             return -1;
     }
+
+    for (unsigned i = 0, n = md.inputs.size(); i < n; ++i)
+        extract_io(root, dspfile, processname, i, false, md);
+
+    for (unsigned i = 0, n = md.outputs.size(); i < n; ++i)
+        extract_io(root, dspfile, processname, i, true, md);
 
     if (mdsource) {
         std::string line;
@@ -217,6 +226,86 @@ static int extract_widget(pugi::xml_node node, bool is_active, Metadata &md)
     }
 
     (is_active ? md.active : md.passive).push_back(std::move(w));
+    return 0;
+}
+
+static void extract_faustlike_controller_string(
+    nonstd::string_view value, std::string &name,
+    std::vector<std::pair<std::string, std::string>> &valuemap)
+{
+    name.clear();
+    name.reserve(256);
+    valuemap.clear();
+    valuemap.reserve(16);
+
+    auto trim = [](nonstd::string_view s) -> nonstd::string_view {
+        auto is_whitespace = [](char c) -> bool { return c == ' ' && c == '\t'; };
+        while (!s.empty() && is_whitespace(s.front())) s.remove_prefix(1);
+        while (!s.empty() && is_whitespace(s.back())) s.remove_suffix(1);
+        return s;
+    };
+
+    while (!value.empty()) {
+        size_t pos = value.find('[');
+        if (pos == value.npos) {
+            name.append(value.begin(), value.end());
+            value = nonstd::string_view();
+        }
+        else {
+            name.append(value.begin(), value.begin() + pos);
+            value.remove_prefix(pos + 1);
+
+            pos = value.find(']');
+            nonstd::string_view mdtext;
+            if (pos == value.npos) {
+                mdtext = value;
+                value = nonstd::string_view();
+            }
+            else {
+                mdtext = value.substr(0, pos);
+                value.remove_prefix(pos + 1);
+            }
+
+            nonstd::string_view mdkey;
+            nonstd::string_view mdvalue;
+            pos = mdtext.find(':');
+            if (pos == mdtext.npos)
+                mdkey = mdtext;
+            else {
+                mdkey = mdtext.substr(0, pos);
+                mdvalue = mdtext.substr(pos + 1);
+            }
+
+            valuemap.emplace_back(trim(mdkey), trim(mdvalue));
+        }
+    }
+
+    name = trim(name).to_string();
+}
+
+static int extract_io(pugi::xml_node root, const std::string &dspfile, const std::string &processname, unsigned index, bool is_output, Metadata &md)
+{
+    unsigned count = (unsigned)(is_output ? md.outputs.size() : md.inputs.size());
+
+    std::string key;
+    key.reserve(256);
+
+    key.append(dspfile);
+    key.push_back('/');
+    key.append(processname);
+    key.append(is_output ? ":output" : ":input");
+    key.append(std::to_string(index));
+
+    pugi::xml_node meta = root.find_child([&key](pugi::xml_node node) -> bool {
+        return gsl::cstring_span("meta") == node.name() &&
+            key == node.attribute("key").value();
+    });
+    if (!meta)
+        return -1;
+
+    Metadata::IO &io = is_output ? md.outputs[index] : md.inputs[index];
+    extract_faustlike_controller_string(meta.child_value(), io.name, io.metadata);
+
     return 0;
 }
 
@@ -433,9 +522,10 @@ static jinja2::ValuesMap make_global_environment(
     root_obj["license"] = md.license;
     root_obj["version"] = md.version;
     root_obj["class_name"] = md.classname;
+    root_obj["process_name"] = md.processname;
     root_obj["file_name"] = md.filename;
-    root_obj["inputs"] = (int64_t)md.inputs;
-    root_obj["outputs"] = (int64_t)md.outputs;
+    root_obj["inputs"] = (int64_t)md.inputs.size();
+    root_obj["outputs"] = (int64_t)md.outputs.size();
 
     jinja2::ValuesMap &file_meta = (root_obj["meta"] = jinja2::ValuesMap()).asMap();
     for (const auto &meta : md.metadata)
@@ -477,6 +567,37 @@ static jinja2::ValuesMap make_global_environment(
             jinja2::ValuesMap &widget_meta = (widget_obj["meta"] = jinja2::ValuesMap()).asMap();
             for (const auto &meta : widget.metadata)
                 widget_meta[meta.first] = parse_value_string(meta.second);
+        }
+    }
+
+    for (unsigned iotype = 0; iotype < 2; ++iotype) {
+        const std::vector<Metadata::IO> *io_list = nullptr;
+        jinja2::ValuesList *io_list_obj;
+
+        if (iotype == 0) {
+            io_list = &md.inputs;
+#warning TODO choose a better name
+            io_list_obj = &((root_obj["ins"] = jinja2::ValuesList()).asList());
+        }
+        else if (iotype == 1) {
+            io_list = &md.outputs;
+#warning TODO choose a better name
+            io_list_obj = &((root_obj["outs"] = jinja2::ValuesList()).asList());
+        }
+
+        assert(io_list);
+
+        for (size_t i = 0, n = io_list->size(); i < n; ++i) {
+            const Metadata::IO &io = (*io_list)[i];
+
+            jinja2::ValuesMap &io_obj = (io_list_obj->emplace_back(jinja2::ValuesMap()),
+                                         io_list_obj->back()).asMap();
+
+            io_obj["name"] = io.name;
+
+            jinja2::ValuesMap &io_meta = (io_obj["meta"] = jinja2::ValuesMap()).asMap();
+            for (const auto &meta : io.metadata)
+                io_meta[meta.first] = parse_value_string(meta.second);
         }
     }
 
