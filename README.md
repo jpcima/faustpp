@@ -34,3 +34,22 @@ which is done with the option `-D`.
 faustpp -X-vec -DIdentifier=MyEffect -a generic.cpp effect.dsp > effect.cpp
 faustpp -X-vec -DIdentifier=MyEffect -a generic.hpp effect.dsp > effect.hpp
 ```
+
+## Building
+
+To build the software yourself, you may type the following commands, or open the project in your favorite IDE.
+
+```
+git clone --recursive https://github.com/jpcima/faustpp.git
+cd faustpp
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+cmake --build .
+```
+
+And then install (optional):
+
+```
+sudo cmake --build . --target install
+```
