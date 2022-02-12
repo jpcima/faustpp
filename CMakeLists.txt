@@ -25,7 +25,7 @@ target_include_directories(nonstd
 # fmt
 add_library(fmt STATIC EXCLUDE_FROM_ALL
   "thirdparty/fmt/src/format.cc"
-  "thirdparty/fmt/src/posix.cc")
+  "thirdparty/fmt/src/os.cc")
 target_include_directories(fmt
   PUBLIC "thirdparty/fmt/include")
 
@@ -75,7 +75,8 @@ add_library(jinja2 STATIC EXCLUDE_FROM_ALL
   "thirdparty/jinja2cpp/src/template_parser.cpp"
   "thirdparty/jinja2cpp/src/expression_parser.cpp"
   "thirdparty/jinja2cpp/src/filesystem_handler.cpp"
-  "thirdparty/jinja2cpp/src/template_env.cpp")
+  "thirdparty/jinja2cpp/src/template_env.cpp"
+  "thirdparty/jinja2cpp/src/generic_list.cpp")
 target_include_directories(jinja2
   PUBLIC "thirdparty/jinja2cpp/include")
 target_link_libraries(jinja2
