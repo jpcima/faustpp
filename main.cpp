@@ -28,6 +28,7 @@ static const char *g_argv0;
 
 struct Cmd_Args {
     std::string tmplfile;
+    std::string outfile;
     std::string dspfile;
     std::map<std::string, std::string> defines;
     Faust_Args faustargs;
@@ -127,15 +128,32 @@ int main(int argc, char *argv[])
     else
         md.filename = cmd.dspfile.substr(dspfilesep + 1);
 
-    render_metadata(std::cout, md, cmd.tmplfile, cmd.defines);
-    std::cout.flush();
+    std::ostream *out;
+    std::ofstream fileout;
+    if (cmd.outfile.empty())
+        out = &std::cout;
+    else {
+        fileout.open(cmd.outfile, std::ios::out|std::ios::binary);
+        if (!fileout.good())
+            errs() << "Could not open the output file for writing.\n";
+        out = &fileout;
+    }
+
+    render_metadata(*out, md, cmd.tmplfile, cmd.defines);
+    out->flush();
+
+    if (!out->good()) {
+        errs() << "Could not write the output file.\n";
+        unlink(cmd.outfile.c_str());
+        return 1;
+    }
 
     return 0;
 }
 
 static void display_usage()
 {
-    std::cerr << "Usage: faustpp [-a <architecture-file>] [-D<name=value>] [-X<faust-arg>] <file.dsp>\n";
+    std::cerr << "Usage: faustpp [-a <architecture-file>] [-o <output-file>] [-D<name=value>] [-X<faust-arg>] <file.dsp>\n";
 }
 
 static int do_cmdline(Cmd_Args &cmd, int argc, char *argv[])
@@ -154,6 +172,13 @@ static int do_cmdline(Cmd_Args &cmd, int argc, char *argv[])
                 return -1;
             }
             cmd.tmplfile = argv[i];
+        }
+        else if (moreflags && arg == "-o") {
+            if (++i == argc) {
+                errs() << "The flag `-o` requires an argument.\n";
+                return -1;
+            }
+            cmd.outfile = argv[i];
         }
         else if (moreflags && arg.subspan(0, 2) == "-D") {
             gsl::cstring_span expr = arg.subspan(2);
