@@ -357,9 +357,9 @@ private:
     std::string msg;
 };
 
-void render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines)
+bool render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines)
 {
-    std::string tmplbase;
+   std::string tmplbase;
     std::string tmpldir = tmplfile;
     while (!tmpldir.empty() && !is_path_separator(tmpldir.back()))
         tmpldir.pop_back();
@@ -385,7 +385,7 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
     auto tmpl = env.LoadTemplate(tmplbase);
     if (!tmpl) {
         errs() << tmpl.error() << '\n';
-        return;
+        return false;
     }
 
     for (std::pair<const std::string, jinja2::Value> &kv : make_global_environment(md, defines))
@@ -404,7 +404,10 @@ void render_metadata(std::ostream &out, const Metadata &md, const std::string &t
     }
     catch (RenderFailure &rf) {
         errs() << "Received error from template: " << rf.message() << '\n';
+        return false;
     }
+
+    return true;
 }
 
 static jinja2::Value parse_value_string(const std::string &value)

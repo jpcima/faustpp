@@ -51,13 +51,13 @@ int main(int argc, char *argv[])
 
     if (cmd.tmplfile.empty()) {
         errs() << "No architecture file has been specified.\n";
-        return -1;
+        return 1;
     }
 
     cmd.tmplfile = find_template_file(cmd.tmplfile);
     if (cmd.tmplfile.empty()) {
         errs() << "Cannot find the architecture file.\n";
-        return -1;
+        return 1;
     }
 
     Faust_Version faustver;
@@ -73,12 +73,12 @@ int main(int argc, char *argv[])
 
     std::string mdfile = get_tempfile_location("md.cpp");
     if (mdfile.empty())
-        return -1;
+        return 1;
 
     std::ofstream mds(mdfile);
     if (!mds) {
         errs() << "Could not open the temporary file for writing.\n";
-        return -1;
+        return 1;
     }
     auto md_cleanup = gsl::finally([&]() { unlink(mdfile.c_str()); });
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         mds.flush();
         if (!mds) {
             errs() << "Could not write the temporary file.\n";
-            return -1;
+            return 1;
         }
         mds.close();
     }
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     Metadata md;
     if (extract_metadata(doc, md, &mdsource) == -1) {
         errs() << "Could not extract the faust metadata.\n";
-        return -1;
+        return 1;
     }
 
 #if !defined(_WIN32)
@@ -139,7 +139,11 @@ int main(int argc, char *argv[])
         out = &fileout;
     }
 
-    render_metadata(*out, md, cmd.tmplfile, cmd.defines);
+    if (!render_metadata(*out, md, cmd.tmplfile, cmd.defines)) {
+        unlink(cmd.outfile.c_str());
+        return 1;
+    }
+
     out->flush();
 
     if (!out->good()) {

@@ -56,7 +56,7 @@ struct Metadata {
 };
 
 int extract_metadata(const pugi::xml_document &doc, Metadata &md, const std::string *mdsource);
-void render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines);
+bool render_metadata(std::ostream &out, const Metadata &md, const std::string &tmplfile, const std::map<std::string, std::string> &defines);
 
 std::ostream &operator<<(std::ostream &o, Metadata::Widget::Type t);
 std::ostream &operator<<(std::ostream &o, Metadata::Widget::Scale s);
