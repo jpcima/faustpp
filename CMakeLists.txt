@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.3)
 
 project(faustpp)
 
+option(FAUSTPP_USE_INTERNAL_BOOST "Use internal Boost libraries" OFF)
 option(FAUSTPP_LINK_STATIC_BOOST "Link static Boost libraries" OFF)
 option(FAUSTPP_BUILD_EXAMPLES "Build examples" OFF)
 
@@ -37,7 +38,34 @@ target_include_directories(pugixml
 
 # boost
 set(Boost_USE_STATIC_LIBS "${FAUSTPP_LINK_STATIC_BOOST}")
+
+if(${FAUSTPP_USE_INTERNAL_BOOST})
+set(BOOST_ENABLE_CMAKE ON)
+set(BOOST_DIR ${PROJECT_SOURCE_DIR}/thirdparty/jinja2cpp/thirdparty/boost)
+set(BOOST_INCLUDE_LIBRARIES
+    algorithm
+    assert
+    atomic
+    filesystem
+    lexical_cast
+    optional
+    variant
+CACHE INTERNAL "")
+add_subdirectory(${BOOST_DIR})
+set(Boost_INCLUDE_DIRS
+  ${BOOST_DIR}/libs/algorithm/include
+  ${BOOST_DIR}/libs/container/include
+  ${BOOST_DIR}/libs/intrusive/include
+  ${BOOST_DIR}/libs/numeric/conversion/include
+  ${BOOST_DIR}/libs/range/include
+  ${BOOST_DIR}/libs/unordered/include
+  ${BOOST_DIR}/libs/variant/include
+)
+set(Boost_SYSTEM_LIBRARY Boost::system)
+set(Boost_FILESYSTEM_LIBRARY Boost::filesystem)
+else()
 find_package(Boost REQUIRED COMPONENTS "filesystem" "system")
+endif()
 
 add_library(boost INTERFACE)
 target_include_directories(boost
