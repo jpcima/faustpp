@@ -1,0 +1,10 @@
+[project]
+name = "faustpp"
+version = "0.0.0"
+dependencies = ["Jinja2"]
+
+[tool.setuptools.packages.find]
+include = ["faustpp"]
+
+[project.scripts]
+faustpp = "faustpp.main:main"
