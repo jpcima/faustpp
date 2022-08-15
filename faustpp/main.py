@@ -36,6 +36,7 @@ def main(args=sys.argv):
 <<includeIntrinsic>>
 <<includeclass>>
 <<<<EndFaustClass>>>>""")
+            mdfile.flush()
 
             mdargs: list[str] = cmd.faustargs + ['-a', mdfile.name]
             mdresult: FaustResult = call_faust(cmd.dspfile, mdargs)
