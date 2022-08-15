@@ -30,26 +30,14 @@ This example can be used to generate any file. Pass options to the Faust compile
 In this particular example, you should pass a definition of `Identifier` in order to name the result class,
 which is done with the option `-D`.
 
-```
+```sh
 faustpp -X-vec -DIdentifier=MyEffect -a generic.cpp effect.dsp > effect.cpp
 faustpp -X-vec -DIdentifier=MyEffect -a generic.hpp effect.dsp > effect.hpp
 ```
 
-## Building
+## Installation
 
-To build the software yourself, you may type the following commands, or open the project in your favorite IDE.
-
-```
-git clone --recursive https://github.com/jpcima/faustpp.git
-cd faustpp
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
-cmake --build .
-```
-
-And then install (optional):
-
-```
-sudo cmake --build . --target install
+Assuming you have Python installed (>= 3), change directory to the working copy and type this command:
+```sh
+pip install .
 ```
