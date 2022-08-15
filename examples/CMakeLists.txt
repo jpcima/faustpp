@@ -1,34 +1,39 @@
-include(FindPkgConfig)
+cmake_minimum_required(VERSION "3.14")
+project(faustpp-examples)
 
-pkg_check_modules(JACK "jack" REQUIRED)
+###
+find_package(PkgConfig)
+pkg_check_modules(jack "jack" REQUIRED IMPORTED_TARGET)
+find_package(Python REQUIRED)
 
-link_directories("${JACK_LIBRARY_DIRS}")
+###
+set(FAUSTPP_COMMAND "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../run-faustpp.py")
+set(FAUSTPP_ARCHITECTURES "${CMAKE_CURRENT_SOURCE_DIR}/../architectures")
+set(FAUSTPP_THIRDPARTY "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty")
 
+###
 macro(add_example NAME)
   add_executable("${NAME}"
     "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp"
     "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.hpp"
     "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.jack.cpp")
-  target_include_directories("${NAME}"
-    PRIVATE "${JACK_INCLUDE_DIRS}")
-  target_link_libraries("${NAME}"
-    PRIVATE "${JACK_LIBRARIES}")
+  target_link_libraries("${NAME}" PRIVATE PkgConfig::jack)
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
-    COMMAND "$<TARGET_FILE:faustpp>" -a "${PROJECT_SOURCE_DIR}/architectures/generic.cpp"
+    COMMAND ${FAUSTPP_COMMAND} -a "${FAUSTPP_ARCHITECTURES}/generic.cpp"
             "-DIdentifier=${NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
             "-o" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cpp")
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.hpp"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
-    COMMAND "$<TARGET_FILE:faustpp>" -a "${PROJECT_SOURCE_DIR}/architectures/generic.hpp"
+    COMMAND ${FAUSTPP_COMMAND} -a "${FAUSTPP_ARCHITECTURES}/generic.hpp"
             "-DIdentifier=${NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
             "-o" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.hpp")
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.jack.cpp"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
-    COMMAND "$<TARGET_FILE:faustpp>" -a "${PROJECT_SOURCE_DIR}/architectures/jack_simple.cpp"
+    COMMAND ${FAUSTPP_COMMAND} -a "${FAUSTPP_ARCHITECTURES}/jack_simple.cpp"
             "-DIdentifier=${NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
             "-o" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.jack.cpp")
 endmacro()
@@ -39,27 +44,24 @@ macro(add_oversampled_example NAME)
       "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.cpp"
       "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.hpp"
       "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.jack.cpp")
-    target_include_directories("${NAME}${FACTOR}X"
-      PRIVATE "${JACK_INCLUDE_DIRS}"
-      PRIVATE "${PROJECT_SOURCE_DIR}/thirdparty/hiir")
-    target_link_libraries("${NAME}${FACTOR}X"
-      PRIVATE "${JACK_LIBRARIES}")
+    target_include_directories("${NAME}${FACTOR}X" PRIVATE "${FAUSTPP_THIRDPARTY}/hiir")
+    target_link_libraries("${NAME}${FACTOR}X" PRIVATE PkgConfig::jack)
     add_custom_command(
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.cpp"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
-      COMMAND "$<TARGET_FILE:faustpp>" -a "${PROJECT_SOURCE_DIR}/architectures/oversampled.cpp"
+      COMMAND ${FAUSTPP_COMMAND} -a "${FAUSTPP_ARCHITECTURES}/oversampled.cpp"
               "-DIdentifier=${NAME}${FACTOR}X" "-DOversampling=${FACTOR}" "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
               "-o" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.cpp")
     add_custom_command(
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.hpp"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
-      COMMAND "$<TARGET_FILE:faustpp>" -a "${PROJECT_SOURCE_DIR}/architectures/oversampled.hpp"
+      COMMAND ${FAUSTPP_COMMAND} -a "${FAUSTPP_ARCHITECTURES}/oversampled.hpp"
               "-DIdentifier=${NAME}${FACTOR}X" "-DOversampling=${FACTOR}" "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
               "-o" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.hpp")
     add_custom_command(
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.jack.cpp"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
-      COMMAND "$<TARGET_FILE:faustpp>" -a "${PROJECT_SOURCE_DIR}/architectures/jack_simple.cpp"
+      COMMAND ${FAUSTPP_COMMAND} -a "${FAUSTPP_ARCHITECTURES}/jack_simple.cpp"
               "-DIdentifier=${NAME}${FACTOR}X" "-DOversampling=${FACTOR}" "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}.dsp"
               "-o" "${CMAKE_CURRENT_BINARY_DIR}/${NAME}${FACTOR}X.jack.cpp")
   endforeach()
