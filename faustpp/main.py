@@ -25,9 +25,9 @@ class CmdArgs:
 class CmdError(Exception):
     pass
 
-def main():
+def main(args=sys.argv):
     with ExitStack() as cleanup_stack:
-        cmd: CmdArgs = do_cmdline(sys.argv)
+        cmd: CmdArgs = do_cmdline(args)
 
         ensure_faust_version(FaustVersion(0, 9, 85))
 
