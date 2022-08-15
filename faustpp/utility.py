@@ -106,11 +106,17 @@ def mangle(name: str) -> str:
         n = 1
 
     id = bytearray()
+
+    c: int
+    c = src[0]
+    if c >= ord('0') and c <= ord('9'):
+        id.append(ord('_'))
+
     for i in range(n):
-        c: int = src[i]
+        c = src[i]
         al: bool = (c >= ord('a') and c <= ord('z')) or (c >= ord('A') and c <= ord('Z'))
         num: bool = c >= ord('0') and c <= ord('9')
-        if not al and (not num or i == 0):
+        if not al and not num:
             c = ord('_')
         id.append(c);
 
