@@ -9,7 +9,7 @@ from faustpp.call_faust import FaustVersion, ensure_faust_version, FaustResult, 
 from faustpp.metadata import Metadata, extract_metadata
 from faustpp.render import render_metadata
 from argparse import ArgumentParser, Namespace
-from typing import Optional, TextIO
+from typing import Optional, TextIO, List, Dict
 from tempfile import NamedTemporaryFile
 from contextlib import ExitStack
 import os
@@ -19,8 +19,8 @@ class CmdArgs:
     tmplfile: str
     outfile: Optional[str]
     dspfile: str
-    defines: dict[str, str]
-    faustargs: list[str]
+    defines: Dict[str, str]
+    faustargs: List[str]
 
 class CmdError(Exception):
     pass
@@ -38,7 +38,7 @@ def main(args=sys.argv):
 <<<<EndFaustClass>>>>""")
             mdfile.flush()
 
-            mdargs: list[str] = cmd.faustargs + ['-a', mdfile.name]
+            mdargs: List[str] = cmd.faustargs + ['-a', mdfile.name]
             mdresult: FaustResult = call_faust(cmd.dspfile, mdargs)
 
             md: Metadata = extract_metadata(mdresult.docmd, mdresult.cppsource)
@@ -65,7 +65,7 @@ def main(args=sys.argv):
 
         success = True
 
-def do_cmdline(args: list[str]) -> CmdArgs:
+def do_cmdline(args: List[str]) -> CmdArgs:
     parser: ArgumentParser = ArgumentParser(description='A post-processor for the faust compiler')
     parser.add_argument(('-a'), metavar='tmplfile', dest='tmplfile', help='architecture file')
     parser.add_argument(('-o'), metavar='outfile', dest='outfile', help='output file')

@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: BSL-1.0
 
 from faustpp.utility import parse_cstrlit, safe_element_text
-from typing import Optional
+from typing import Optional, List, Dict
 from subprocess import run, CompletedProcess, PIPE
 from tempfile import TemporaryDirectory
 import xml.etree.ElementTree as ET
@@ -43,7 +43,7 @@ def get_faust_command() -> str:
     return cmd
 
 def get_faust_version() -> FaustVersion:
-    cmd: list[str] = [get_faust_command(), '--version']
+    cmd: List[str] = [get_faust_command(), '--version']
     proc: CompletedProcess = run(cmd, stdout=PIPE)
     proc.check_returncode()
 
@@ -68,7 +68,7 @@ class FaustResult:
     cppsource: str
     docmd: ET.ElementTree
 
-def call_faust(dspfile: str, faustargs: list[str]) -> FaustResult:
+def call_faust(dspfile: str, faustargs: List[str]) -> FaustResult:
     workdir = TemporaryDirectory()
 
     dspfilebase = os.path.basename(dspfile)
@@ -77,7 +77,7 @@ def call_faust(dspfile: str, faustargs: list[str]) -> FaustResult:
     xmlfile = os.path.join(workdir.name, xmlfilebase)
     cppfile = os.path.join(workdir.name, cppfilebase)
 
-    fargv: list[str] = [
+    fargv: List[str] = [
         get_faust_command(),
         "-O", workdir.name,
         "-o", cppfilebase,
@@ -99,14 +99,14 @@ def call_faust(dspfile: str, faustargs: list[str]) -> FaustResult:
 
 def apply_workarounds(cppsource: str, docmd: ET.ElementTree):
     line: str
-    lines: list[str]
+    lines: List[str]
 
     # fix missing <meta>
     has_meta: bool = docmd.find('meta') is not None
     if not has_meta:
         lines = cppsource.splitlines()
 
-        widget_nodes: dict[str, ET.Element] = {}
+        widget_nodes: Dict[str, ET.Element] = {}
 
         for elt in docmd.findall('./ui/activewidgets/widget'):
             widget_nodes[safe_element_text(elt.find('varname'))] = elt

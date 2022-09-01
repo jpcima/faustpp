@@ -7,24 +7,24 @@
 
 from faustpp.metadata import Metadata, WTYPE_Active, WTYPE_Passive
 from faustpp.utility import cstrlit, mangle
-from typing import Any, Optional, TextIO
+from typing import Any, Optional, TextIO, List, Dict, Tuple
 from jinja2 import Environment, FileSystemLoader
 import os
 
 class RenderFailure(Exception):
     pass
 
-def render_metadata(out: TextIO, md: Metadata, tmplfile: str, defines: dict[str, str]):
+def render_metadata(out: TextIO, md: Metadata, tmplfile: str, defines: Dict[str, str]):
     tmpldir: str = os.path.dirname(tmplfile)
     env = Environment(loader=FileSystemLoader(tmpldir))
     template = env.get_template(os.path.basename(tmplfile))
 
-    context: dict[str, Any] = make_global_environment(md, defines)
+    context: Dict[str, Any] = make_global_environment(md, defines)
 
     out.write(template.render(context))
 
-def make_global_environment(md: Metadata, defines: dict[str, str]) -> dict[str, Any]:
-    context: dict[str, Any] = {}
+def make_global_environment(md: Metadata, defines: Dict[str, str]) -> Dict[str, Any]:
+    context: Dict[str, Any] = {}
 
     context["class_code"] = md.class_code;
 
@@ -38,17 +38,17 @@ def make_global_environment(md: Metadata, defines: dict[str, str]) -> dict[str, 
     context["inputs"] = int(md.inputs);
     context["outputs"] = int(md.outputs);
 
-    meta: tuple[str, str]
+    meta: Tuple[str, str]
 
-    file_meta: dict[str, Any] = {}
+    file_meta: Dict[str, Any] = {}
     for meta in md.metadata:
         file_meta[meta[0]] = parse_value_string(meta[1])
     context["meta"] = file_meta
 
     wtype: int
     for wtype in (WTYPE_Active, WTYPE_Passive):
-        widget_list: list[Metadata.Widget] = []
-        widget_list_obj: list[dict[str, Any]] = []
+        widget_list: List[Metadata.Widget] = []
+        widget_list_obj: List[Dict[str, Any]] = []
 
         if wtype == WTYPE_Active:
             widget_list = md.active
@@ -59,7 +59,7 @@ def make_global_environment(md: Metadata, defines: dict[str, str]) -> dict[str, 
         for i in range(len(widget_list)):
             widget: Metadata.Widget = widget_list[i]
 
-            widget_obj: dict[str, Any] = {}
+            widget_obj: Dict[str, Any] = {}
 
             widget_obj["type"] = widget.typestring;
             widget_obj["id"] = widget.id;
@@ -73,7 +73,7 @@ def make_global_environment(md: Metadata, defines: dict[str, str]) -> dict[str, 
             widget_obj["scale"] = widget.scalestring;
             widget_obj["tooltip"] = widget.tooltip;
 
-            widget_meta: dict[str, Any] = {}
+            widget_meta: Dict[str, Any] = {}
             for meta in widget.metadata:
                 widget_meta[meta[0]] = parse_value_string(meta[1])
             widget_obj["meta"] = widget_meta

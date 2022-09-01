@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: BSL-1.0
 
 from faustpp.utility import safe_element_text, safe_element_attribute, is_decint_string, parse_cfloat
+from typing import List, Tuple
 import xml.etree.ElementTree as ET
 import re
 
@@ -32,7 +33,7 @@ class Metadata:
     version : str
     classname : str
     filename : str
-    metadata = list[tuple[str, str]]
+    metadata = List[Tuple[str, str]]
     inputs : int
     outputs : int
 
@@ -47,7 +48,7 @@ class Metadata:
         min: float
         max: float
         step: float
-        metadata: list[tuple[str, str]]
+        metadata: List[Tuple[str, str]]
 
         # metadata interpretation
         unit: str
@@ -55,8 +56,8 @@ class Metadata:
         scalestring: str
         tooltip: str
 
-    active: list[Widget];
-    passive: list[Widget];
+    active: List[Widget];
+    passive: List[Widget];
 
     class_code: str
 
