@@ -41,3 +41,9 @@ Assuming you have Python installed (>= 3), change directory to the working copy 
 ```sh
 pip install .
 ```
+
+## Release notes
+
+**1.0.0**
+
+- Initial release
