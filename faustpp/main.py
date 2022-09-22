@@ -12,6 +12,7 @@ from argparse import ArgumentParser, Namespace
 from typing import Optional, TextIO, List, Dict
 from tempfile import NamedTemporaryFile
 from contextlib import ExitStack
+import importlib.resources
 import os
 import sys
 
@@ -59,7 +60,8 @@ def main(args=sys.argv):
                 os.unlink(cmd.outfile)
         cleanup_stack.callback(out_cleanup)
 
-        render_metadata(out, md, cmd.tmplfile, cmd.defines)
+        tmplfile : str = find_template_file(cmd.tmplfile)
+        render_metadata(out, md, tmplfile, cmd.defines)
 
         out.flush()
 
@@ -98,5 +100,12 @@ def do_cmdline(args: List[str]) -> CmdArgs:
     return cmd
 
 def find_template_file(name: str) -> str:
-    #TODO implement the file search... 
+    # if missing, search in package resources
+    if not os.path.isfile(name):
+        pkgname : str = __name__[0:name.rindex('.')]
+        with importlib.resources.path(pkgname, 'architectures') as arcdir:
+            path : str = os.path.join(arcdir, name)
+            if os.path.isfile(path):
+                return path
+    # or return the path as it is
     return name
