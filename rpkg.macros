@@ -1,0 +1,3 @@
+function package_version() {
+    output "$(python3 setup.py --version)"
+}
